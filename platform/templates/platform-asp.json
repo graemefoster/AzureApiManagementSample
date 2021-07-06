@@ -42,7 +42,7 @@
         "ApplicationId": "[parameters('apiName')]",
         "Application_Type": "functions",
         "WorkspaceResourceId": "[parameters('workspaceId')]",
-        "SamplingPercentage" : 5
+        "SamplingPercentage": 5
       }
     },
     {
@@ -200,7 +200,10 @@
       "apiVersion": "2019-09-01",
       "properties": {
         "value": "[listkeys(concat('Microsoft.Web/sites/', parameters('apiName'), '/host/default/'),'2016-08-01').functionKeys.default]"
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+      ]
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
