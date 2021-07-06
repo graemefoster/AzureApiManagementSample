@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<wsdl:definitions name="SV_EMPLOYEES.1"
+	targetNamespace="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/WSDL"
+	xmlns:EMPLOYMENTDETAILSREQUEST.V1="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Request"
+	xmlns:EMPLOYMENTDETAILSRESPONSE.V1="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Response"
+	xmlns:plnk="http://schemas.xmlsoap.org/ws/2003/05/partner-link/"
+	xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+	xmlns:tns="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/WSDL"
+	xmlns:ha="http://xml.samplesoap/soa/assertions"
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsp="http://schemas.xmlsoap.org/ws/2002/12/policy"
+	xmlns="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/WSDL">
+	<wsp:UsagePolicy wsdl:Required="true" />
+	<plnk:partnerLinkType name="SV_EMPLOYEES_PartnerLinkType">
+		<plnk:role name="SV_EMPLOYEES_Provider">
+			<plnk:portType name="tns:SV_EMPLOYEES_PortType" />
+		</plnk:role>
+	</plnk:partnerLinkType>
+
+	<wsdl:types>
+		<xsd:schema elementFormDefault="qualified"
+			xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+			<xsd:import
+				namespace="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Request"
+				schemaLocation="XSD/SV-EmploymentDetailsRequest.V1.xsd">
+			</xsd:import>
+			<xsd:import
+				namespace="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Response"
+				schemaLocation="XSD/SV-EmploymentDetailsResponse.V1.xsd">
+			</xsd:import>
+			<xsd:import
+				namespace="http://xml.samplesoap/soa/assertions"
+				schemaLocation="XSD/HandlingAssertion.xsd">
+			</xsd:import>
+		</xsd:schema>
+	</wsdl:types>
+
+	<wsdl:message name="HandlingAssertion">
+		<wsdl:part name="parameters" element="ha:HandlingAssertion"/>
+	</wsdl:message>
+
+	<wsdl:message name="EMPLOYMENTDETAILSREQUEST.V1">
+		<wsdl:part element="EMPLOYMENTDETAILSREQUEST.V1:EmploymentDetailsRequestMessage"
+			name="parameter" />
+	</wsdl:message>
+
+	<wsdl:message name="EMPLOYMENTDETAILSRESPONSE.V1">
+		<wsdl:part
+			element="EMPLOYMENTDETAILSRESPONSE.V1:EmploymentDetailsResponseMessage"
+			name="parameter" />
+	</wsdl:message>
+
+	<wsdl:message name="EmploymentDetailsFault">
+	</wsdl:message>
+
+	<wsdl:portType name="SV_EMPLOYEES_PortType">
+		<wsdl:operation name="REQUESTEMPLOYMENTDETAILS">
+			<wsdl:documentation>Request Employee Employment Details</wsdl:documentation>
+			<wsdl:input message="tns:EMPLOYMENTDETAILSREQUEST.V1" name="EMPLOYMENTDETAILSREQUEST.V1" />
+			<wsdl:output message="tns:EMPLOYMENTDETAILSRESPONSE.V1" name="EMPLOYMENTDETAILSRESPONSE.V1" />
+			<wsdl:fault name="fault" message="tns:EmploymentDetailsFault"/>
+		</wsdl:operation>
+	</wsdl:portType>
+
+	<wsdl:binding name="SV_EMPLOYEES_Binding" type="tns:SV_EMPLOYEES_PortType">
+		<soap12:binding style="document"
+			transport="http://schemas.xmlsoap.org/soap/http" />
+
+		<wsdl:operation name="REQUESTEMPLOYMENTDETAILS">
+			<soap12:operation soapAction="REQUESTEMPLOYMENTDETAILS.V1"
+				style="document" />
+			<wsp:Policy wsu:Id="UsernameTokenSecurityPolicyPasswordOptional"
+				xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+				<wsp:ExactlyOne>
+					<wsp:All>
+						<wsse:SecurityToken wsp:Usage="wsp:Required"
+							xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+							<wsse:TokenType>wsse:UserNameToken</wsse:TokenType>
+							<Claims>
+								<SubjectName MatchType="wsse:Exact" />
+								<UsePassword wsp:Usage="wsp:Optional" />
+							</Claims>
+						</wsse:SecurityToken>
+					</wsp:All>
+				</wsp:ExactlyOne>
+			</wsp:Policy>
+			<wsdl:input name="EMPLOYMENTDETAILSREQUEST.V1">
+				<soap12:header message="tns:HandlingAssertion" part="parameters" use="literal" />
+				<soap12:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="literal" />
+			</wsdl:input>
+			<wsdl:output name="EMPLOYMENTDETAILSRESPONSE.V1">
+				<soap12:header message="tns:HandlingAssertion" part="parameters" use="literal" />
+				<soap12:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+
+	</wsdl:binding>
+	<wsdl:service name="SV_EMPLOYEES">
+		<wsdl:documentation>Employee Employment Details Interface</wsdl:documentation>
+		<wsdl:port binding="tns:SV_EMPLOYEES_Binding" name="SV_EMPLOYEES_Binding">
+			<soap12:address
+				location="https://api.sample.soap:8443/HumanResources/Employees/V1.0" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

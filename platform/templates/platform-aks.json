@@ -1,0 +1,193 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetId": { "type": "string" },
+        "vnetName": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "subnetName": { "type": "string" },
+        "aksClusterName": { "type": "string" },
+        "managedIdentityName": { "type": "string" },
+        "resourcePrefix": { "type": "string" }
+    },
+    "variables": {
+        "acrName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'acr')]",
+        "appInsightsName": "[concat(parameters('resourcePrefix'), 'aks', uniqueString(resourceGroup().id), '-appi')]",
+        "privateDnsZoneName": "poc.internal"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ContainerService/managedClusters",
+            "apiVersion": "2020-07-01",
+            "name": "[parameters('aksClusterName')]",
+            "location": "[resourceGroup().location]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "kubernetesVersion": "1.20.5",
+                "dnsPrefix": "[parameters('resourcePrefix')]",
+                "sku": {
+                    "name": "Basic",
+                    "tier": "Paid"
+                },
+                "agentPoolProfiles": [
+                    {
+                        "name": "pocsyspool",
+                        "count": 2,
+                        "vmSize": "Standard_DS2_v2",
+                        "vnetSubnetID": "[concat(parameters('vnetId'), '/subnets/', parameters('subnetName'))]",
+                        "mode": "System",
+                        "type": "VirtualMachineScaleSets"
+                    }
+                ],
+                "addonProfiles": {
+                    "omsagent": {
+                        "enabled": true,
+                        "config": {
+                            "logAnalyticsWorkspaceResourceID": "[parameters('workspaceId')]"
+                        }
+                    }
+                },
+                "enableRBAC": true,
+                "networkProfile": {
+                    "networkPlugin": "kubenet",
+                    "loadBalancerSku": "standard",
+                    "serviceCidr": "10.1.0.0/16",
+                    "dnsServiceIP": "10.1.0.10"
+                },
+                "aadProfile": {
+                    "managed": true,
+                    "enableAzureRBAC": true
+                },
+                "apiServerAccessProfile": {
+                    "enablePrivateCluster": true
+                }
+            }
+        },
+        {
+            "name": "[variables('appInsightsName')]",
+            "type": "microsoft.insights/components",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2020-02-02-preview",
+            "properties": {
+                "ApplicationId": "AksApi",
+                "Application_Type": "api",
+                "WorkspaceResourceId": "[parameters('workspaceId')]"
+            }
+        },
+        {
+            "comments": "Container registry for storing docker images",
+            "type": "Microsoft.ContainerRegistry/registries",
+            "apiVersion": "2019-12-01-preview",
+            "name": "[variables('acrName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "standard"
+            },
+            "properties": {
+                "adminUserEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "4d97b98b-1d4f-4787-a291-c67834d212e7",
+            "dependsOn": [ "[parameters('aksClusterName')]" ],
+            "scope": "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+            "properties": {
+                "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
+                "principalId": "[reference(parameters('aksClusterName'), '2020-07-01', 'Full').identity.principalId]"
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "5d97b98b-1d4f-4787-a291-c67834d212e8",
+            "dependsOn": [ "[variables('acrName')]" ],
+            "scope": "[concat('Microsoft.ContainerRegistry/registries/', variables('acrName'))]",
+            "properties": {
+                "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
+                "principalId": "[reference(parameters('aksClusterName'), '2020-07-01', 'Full').properties.identityProfile.kubeletidentity.objectId]"
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "1d97b98b-1d4f-4787-a291-c67834d212e1",
+            "dependsOn": [ "[parameters('aksClusterName')]" ],
+            "scope": "[concat('Microsoft.ContainerService/managedClusters/', parameters('aksClusterName'))]",
+            "properties": {
+                "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')), '2018-11-30').principalId]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "comments": "AKS ingress ip address gets mapped to this zone",
+            "apiVersion": "2020-01-01",
+            "name": "[variables('privateDnsZoneName')]",
+            "location": "global",
+            "dependsOn": [ "[parameters('aksClusterName')]" ],
+            "resources": [
+                {
+                    "type": "A",
+                    "name": "api",
+                    "apiVersion": "2018-09-01",
+                    "dependsOn": [
+                        "[variables('privateDnsZoneName')]"
+                    ],
+                    "properties": {
+                        "ttl": 600,
+                        "aRecords": [
+                            {
+                                "ipv4Address": "10.0.1.200"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "A",
+                    "name": "apigateway.api",
+                    "apiVersion": "2018-09-01",
+                    "dependsOn": [
+                        "[variables('privateDnsZoneName')]"
+                    ],
+                    "properties": {
+                        "ttl": 600,
+                        "aRecords": [
+                            {
+                                "ipv4Address": "10.0.1.200"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2020-01-01",
+            "name": "[concat(variables('privateDnsZoneName'), '/', variables('privateDnsZoneName'), '-link')]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+            ],
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[parameters('vnetId')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "acrName": {
+            "type": "string",
+            "value": "[variables('acrName')]"
+        },
+        "applicationInsightsConnectionString": {
+            "type": "string",
+            "value": "[reference(variables('appInsightsName')).ConnectionString]"
+        }
+    }
+}

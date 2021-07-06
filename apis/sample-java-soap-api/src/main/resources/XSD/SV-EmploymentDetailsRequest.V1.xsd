@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<xsd:schema
+	targetNamespace="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Request"
+	elementFormDefault="qualified"
+	xmlns="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Request"
+	xmlns:Q1="http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSREQUEST.V1"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+	<xsd:import schemaLocation="EmploymentDetailsRequest.V1.xsd" namespace="http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSREQUEST.V1"></xsd:import>
+
+	<xsd:element name="EmploymentDetailsRequestMessage">
+	<xsd:complexType>
+		<xsd:sequence>
+			<xsd:element name="EmploymentDetailsRequest"
+				type="Q1:EmploymentDetailsRequestType">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

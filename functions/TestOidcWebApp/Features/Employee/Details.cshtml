@@ -1,0 +1,111 @@
+﻿@model TestOidcWebApp.Features.Employee.EmployeeModel
+@{
+    ViewData["Title"] = $"{Model.Summary.EmploymentNumber} Details";
+}
+
+<h2>@Model.Summary.EmailAddress</h2>
+
+<dl>
+    <dd>Address</dd>
+    <dt>
+        <p>
+            @foreach (var line in @Model.Summary.ResidentialAddress.AddressLine)
+            {
+                @line<br>
+            }
+            @Model.Summary.ResidentialAddress.City<br>
+            @Model.Summary.ResidentialAddress.State<br>
+            @Model.Summary.ResidentialAddress.PostCode<br>
+            @Model.Summary.ResidentialAddress.Country<br>
+        </p>
+    </dt>
+</dl>
+<hr />
+<h3>Employment Details</h3>
+<div id="employmentDetails">
+</div>
+<hr />
+<h3>Awards</h3>
+<div id="dynamicContent">
+</div>
+<hr />
+
+@section Scripts
+{
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+    <script type="text/jsx">
+    
+    'use strict';
+    
+    class Awards extends React.Component {
+
+      employmentNumberId = '@Model.EmploymentNumber'; 
+        
+      constructor(props) {
+        super(props);
+        this.state = { awards: [], fetched: false };
+      }
+      
+      componentDidMount() {
+          fetch('/apiproxy/Employee/v1/' + this.employmentNumberId + '/awards').then(r => r.json())
+           .then(r => {
+              this.setState({awards: r, fetched: true});
+              });
+      }
+    
+      render() {
+        if (!this.state.fetched) {
+          return <h4>Fetching awards...</h4>
+        }
+
+       
+        return (<table className="table table-bordered">
+        <tbody>
+        <tr><th>Approved Date</th><th>Title</th><th>Code</th></tr>
+        {this.state.awards.map(x => <tr key={x.approvalDate}><td>{x.approvalDate}</td><td>{x.awardTitle}</td><td>{x.code}</td></tr>)}
+        </tbody>
+        </table>);
+        
+      }
+    }
+
+    class EmploymentDetails extends React.Component {
+
+      employmentNumberId = '@Model.EmploymentNumber'; 
+        
+      constructor(props) {
+        super(props);
+        this.state = { employmentDetails: [], fetched: false };
+      }
+      
+      componentDidMount() {
+          fetch('/apiproxy/Employee/v1/' + this.employmentNumberId + '/employment-details').then(r => r.json())
+           .then(r => {
+              this.setState({employmentDetails: r, fetched: true});
+              });
+      }
+    
+      render() {
+        if (!this.state.fetched) {
+          return <h4>Fetching employment history...</h4>
+        }
+
+       
+        return (<table className="table table-bordered">
+        <tbody>
+        <tr><th>Start Date</th><th>End Date</th></tr>
+        {this.state.employmentDetails.map(x => <tr key={x.startDate}><td>{x.startDate}</td><td>{x.endDate}</td></tr>)}
+        </tbody>
+        </table>);
+        
+      }
+    }
+        
+    ReactDOM.render(<Awards />, document.querySelector('#dynamicContent'));
+    ReactDOM.render(<EmploymentDetails />, document.querySelector('#employmentDetails'));
+
+    </script>
+}

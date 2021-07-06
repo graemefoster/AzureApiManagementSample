@@ -1,0 +1,203 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageBaseUri": { "type": "string" },
+        "templateSasKey": { "type": "string" },
+        "apiManagementServiceName": { "type": "string" }
+    },
+    "variables": {
+        "templateBaseUri": "[concat(parameters('storageBaseUri'), 'policies')]",
+        "backendName": "onpremises-backend",
+        "apiName": "onpremises-employmentdetails-api",
+        "apiVersionSetName": "onpremisesApiVersionSet-v1",
+        "onPremisesBackendPassword": "backend-password"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service/properties",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('apiManagementServiceName'), '/', variables('onPremisesBackendPassword'))]",
+            "properties": {
+                "displayName": "OnPremisesApiProperties",
+                "value": "this-is-a-sample-password",
+                "tags": [
+                    "key",
+                    "function",
+                    "auto"
+                ],
+                "secret": true
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/namedValues",
+            "apiVersion": "2020-12-01",
+            "name": "[concat(parameters('apiManagementServiceName'), '/', variables('onPremisesBackendPassword'))]",
+            "properties": {
+                "displayName": "OnPremisesApiProperties",
+                "value": "this-is-a-sample-password",
+                "tags": [
+                    "key",
+                    "function",
+                    "auto"
+                ],
+                "secret": true
+            }
+        },
+        {
+            "name": "[concat(parameters('apiManagementServiceName'), '/', variables('backendName'))]",
+            "type": "Microsoft.ApiManagement/service/backends",
+            "apiVersion": "2020-06-01-preview",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/properties', parameters('apiManagementServiceName'), variables('onPremisesBackendPassword'))]"
+            ],
+            "properties": {
+                "url": "http://sample-java-soap-api-service.default.svc.cluster.local:5678/ws/",
+                "protocol": "http"
+            }
+        },
+        {
+            "name": "[concat(parameters('apiManagementServiceName'), '/', variables('apiVersionSetName'))]",
+            "type": "Microsoft.ApiManagement/service/apiVersionSets",
+            "apiVersion": "2020-06-01-preview",
+            "properties": {
+                "description": "On Premise API set v1.0",
+                "displayName": "On Premise API Employment Details",
+                "versioningScheme": "Segment"
+            }
+        },
+        {
+            "apiVersion": "2020-06-01-preview",
+            "type": "Microsoft.ApiManagement/service/apis",
+            "name": "[concat(parameters('apiManagementServiceName'), '/', variables('apiName'))]",
+            "dependsOn": [
+                "[variables('backendName')]",
+                "[variables('apiVersionSetName')]"
+            ],
+            "properties": {
+                "displayName": "On Premises Employee API",
+                "description": "Direct access to the backend SOAP API for employee information",
+                "path": "onpremises-employee",
+                "apiVersion": "v1",
+                "apiVersionName": "RTM 1.0",
+                "isCurrent": true,
+                "apiRevisionDescription": "Initial revision",
+                "apiVersionDescription": "Initial On Premises Employment API",
+                "apiVersionSetId": "[concat('/apiVersionSets/', variables('apiVersionSetName'))]",
+                "protocols": [
+                    "HTTPS"
+                ]
+            },
+            "resources": [
+                {
+                    "apiVersion": "2020-06-01-preview",
+                    "type": "diagnostics",
+                    "name": "applicationinsights",
+                    "properties": {
+                        "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', parameters('apiManagementServiceName'), concat(parameters('apiManagementServiceName'), '-appinsights-logger'))]",
+                        "httpCorrelationProtocol" : "W3C",
+                        "logClientIp" : true
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/', variables('apiName'))]"
+                    ]
+                },
+                {
+                    "apiVersion": "2020-06-01-preview",
+                    "type": "operations",
+                    "name": "employeeGET",
+                    "properties": {
+                        "urlTemplate": "/{employeeNumber}",
+                        "displayName": "Get Employee",
+                        "method": "GET",
+                        "templateParameters": [
+                            {
+                                "name": "employeeNumber",
+                                "description": "Employee Number",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "responses": [
+
+                            {
+                                "statusCode": 200,
+                                "description": "Returns employee details on success",
+                                "representations": [
+                                    {
+                                        "contentType": "application/json",
+                                        "typeName": "Employee",
+                                        "sample": "{ \"test\" : \"12345678\" }"
+                                    }
+                                ]
+                            },
+                            {
+                                "statusCode": 404,
+                                "description": "Returned when no such Employee number found"
+                            }
+                        ]
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/', variables('apiName'))]"
+                    ],
+                    "resources": [
+                        {
+                            "type": "policies",
+                            "name": "policy",
+                            "dependsOn": [
+                                "employeeGET"
+                            ],
+                            "apiVersion": "2020-06-01-preview",
+                            "properties": {
+                                "value": "[concat(variables('templateBaseUri'), '/', 'onpremises-api-policy.xml', parameters('templateSasKey'))]",
+                                "format": "rawxml-link"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products",
+            "apiVersion": "2020-12-01",
+            "name": "[concat(parameters('apiManagementServiceName'), '/', 'sample-onpremise-product')]",
+            "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/', variables('apiName'))]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "approvalRequired": true,
+                "displayName": "On Premises Employment Details API product",
+                "subscriptionRequired": true,
+                "subscriptionsLimit": 1,
+                "description": "An example of an API product to call the Employment details APIs from on-premises",
+                "state": "published",
+                "terms": "Rate limited to 5 calls every 30 seconds, max of 100 calls per hour"
+            },
+            "resources": [
+                {
+                    "type": "apis",
+                    "name": "[variables('apiName')]",
+                    "apiVersion": "2020-12-01",
+                    "dependsOn": [ "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'sample-onpremise-product')]" ]
+                },
+                {
+                    "type": "groups",
+                    "name": "Developers",
+                    "apiVersion": "2020-12-01",
+                    "dependsOn": [ "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'sample-onpremise-product')]" ]
+                }
+            ]
+        },
+        {
+            "name": "[concat(parameters('apiManagementServiceName'), '/', parameters('apiManagementServiceName'), '-onprem-apim-gway/', variables('apiName'))]",
+            "type": "Microsoft.ApiManagement/service/gateways/apis",
+            "apiVersion": "2020-06-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/', variables('apiName'))]"
+            ],
+            "properties": {
+            }
+        }
+    ]
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema 
+	xmlns="http://xml.samplesoap/soa/assertions"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://xml.samplesoap/soa/assertions"
+	elementFormDefault="qualified"
+	version="1.0">
+	<xsd:element name="HandlingAssertion" type="HandlingAssertionType"/>
+
+	<xsd:complexType name="HandlingAssertionType">
+		<xsd:sequence>
+			<xsd:element name="HandlingStatement" type="HandlingStatementType" minOccurs="1" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:anyAttribute namespace="##other" processContents="strict"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="HandlingStatementType">
+		<xsd:sequence>
+			<xsd:element name="DataClassification" type="DataClassificationType" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="DataClassificationType">
+		<xsd:sequence>
+			<xsd:element name="ClassificationLabel" minOccurs="0" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="PROTECTED"/>
+						<xsd:enumeration value="PUBLIC"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="TimeStamp" type="xsd:dateTime" use="required"/>
+		<xsd:attribute name="producer" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="255"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+</xsd:schema>

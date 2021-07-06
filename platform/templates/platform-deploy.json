@@ -1,0 +1,369 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageBaseUri": { "type": "string" },
+    "templateSasKey": { "type": "string" },
+    "storageAccountName": { "type": "string" },
+    "jumpboxPublicKey": { "type": "string" },
+    "devopsAgentPublicKey": { "type": "string" },
+    "resourcePrefix": { "type": "string" },
+    "deployWaf": { "type": "bool" },
+    "wafHostname": { "type": "string" },
+    "wafPfxContents": { "type": "secureString" },
+    "wafPfxPassword": { "type": "secureString" },
+    "publisherEmail": { "type": "string" },
+    "devopsServerUrl": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "devopsServerPAT": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "apimSku": {
+      "type": "string",
+      "defaultValue": "Developer",
+      "allowedValues": [ "Developer", "Premium" ]
+    }
+  },
+  "variables": {
+    "vnetName": "[concat(parameters('resourcePrefix'), '-vnet')]",
+    "aksClusterName": "[concat(parameters('resourcePrefix'), '-aks')]",
+    "managedIdentityName": "[concat(parameters('resourcePrefix'), '-devopsidentity')]",
+    "apimSubnetName": "[concat(parameters('resourcePrefix'), '-apim-subnet')]",
+    "aksSubnetName": "[concat(parameters('resourcePrefix'), '-aks-subnet')]",
+    "jumpboxSubnetName": "[concat(parameters('resourcePrefix'), '-jumpbox-subnet')]",
+    "paasSubnetName": "[concat(parameters('resourcePrefix'), '-paas-subnet')]",
+    "privateLinkSubnetName": "[concat(parameters('resourcePrefix'), '-privatelink-subnet')]",
+    "wafSubnetName": "[concat(parameters('resourcePrefix'), '-waf-subnet')]",
+    "keyvaultName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'kv')]",
+    "templateBaseUri": "[concat(parameters('storageBaseUri'), 'platform')]",
+    "scriptBaseUri": "[concat(parameters('storageBaseUri'), 'script')]",
+    "identityServerAppName": "[concat('identityserver', uniqueString(resourceGroup().id))]",
+    "functionAppName": "[concat('rest-soap-', uniqueString(resourceGroup().id))]",
+    "sampleAppName": "[concat('sampleapp', uniqueString(resourceGroup().id))]",
+    "soapApiPasswordSecretName": "soapApiPassword",
+    "functionCodeSecretName": "restToSoapfunctionCode"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "networksTemplate",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-networks.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "vnetName": { "value": "[variables('vnetName')]" },
+          "jumpboxSubnetName": { "value": "[variables('jumpboxSubnetName')]" },
+          "aksSubnetName": { "value": "[variables('aksSubnetName')]" },
+          "apimSubnetName": { "value": "[variables('apimSubnetName')]" },
+          "paasSubnetName": { "value": "[variables('paasSubnetName')]" },
+          "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
+          "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
+          "wafSubnetName": { "value": "[variables('wafSubnetName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "apimTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networksTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'keyvaultTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-apim.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "workspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "subnetName": { "value": "[variables('apimSubnetName')]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "keyvaultName": { "value": "[variables('keyvaultName')]" },
+          "publisherEmail": { "value": "[parameters('publisherEmail')]" },
+          "sku": { "value": "[parameters('apimSku')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "keyvaultTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networksTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-keyvault.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "logAnalyticsWorkspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
+          "keyvaultName": { "value": "[variables('keyvaultName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "aksTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networksTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-aks.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "vnetName": { "value": "[variables('vnetName')]" },
+          "workspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "subnetName": { "value": "[variables('aksSubnetName')]" },
+          "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "aksClusterName": { "value": "[variables('aksClusterName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "jumpboxTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'aksTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-jumpbox.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "subnetName": { "value": "[variables('jumpboxSubnetName')]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "setupScriptUrl": { "value": "[concat(variables('scriptBaseUri'), '/', 'setup-jumpbox.sh', parameters('templateSasKey'))]" },
+          "jumpboxPublicKey": { "value": "[parameters('jumpboxPublicKey')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "devopsAgentTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'aksTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-devops-agent.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "subnetName": { "value": "[variables('jumpboxSubnetName')]" },
+          "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "publicKey": { "value": "[parameters('devopsAgentPublicKey')]" },
+          "setupScriptUrl": { "value": "[concat(variables('scriptBaseUri'), '/', 'setup-devops-agent.sh', parameters('templateSasKey'))]" },
+          "aksClusterName": { "value": "[variables('aksClusterName')]" },
+          "devopsServerUrl": { "value": "[parameters('devopsServerUrl')]" },
+          "devopsServerPAT": { "value": "[parameters('devopsServerPAT')]" },
+          "storageAccountName": { "value": "[parameters('storageAccountName')]" },
+          "storageSasToken": { "value": "[parameters('templateSasKey')]" },
+          "apiManagementName": { "value": "[reference('apimTemplate').outputs['apimName'].value]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "appServicePlanTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networksTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'keyvaultTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-asp.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "vnetName": { "value": "[variables('vnetName')]" },
+          "workspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "paasSubnetName": { "value": "[variables('paasSubnetName')]" },
+          "storageAccountName": { "value": "[parameters('storageAccountName')]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
+          "apiName": { "value": "[variables('functionAppName')]" },
+          "soapEndpoint": { "value": "https://api.poc.internal/country/ws" },
+          "keyVaultName": { "value": "[variables('keyvaultName')]" },
+          "soapApiPasswordSecretName": { "value": "[variables('soapApiPasswordSecretName')]" },
+          "functionCodeSecretName": { "value": "[variables('functionCodeSecretName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "logicAppTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'appServicePlanTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-integration.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "vnetName": { "value": "[variables('vnetName')]" },
+          "paasSubnetName": { "value": "[variables('paasSubnetName')]" },
+          "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
+          "storageAccountName": { "value": "[parameters('storageAccountName')]" },
+          "serverFarmId": { "value": "[reference('appServicePlanTemplate').outputs['serverFarmId'].value]" },
+          "privateDnsZoneName": { "value": "[reference('appServicePlanTemplate').outputs['privateDnsZoneName'].value]" },
+          "workspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "identityServerTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'appServicePlanTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-identity-server.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "vnetName": { "value": "[variables('vnetName')]" },
+          "workspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "paasSubnetName": { "value": "[variables('paasSubnetName')]" },
+          "serverFarmId": { "value": "[reference('appServicePlanTemplate').outputs['serverFarmId'].value]" },
+          "privateDnsZoneName": { "value": "[reference('appServicePlanTemplate').outputs['privateDnsZoneName'].value]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
+          "appName": { "value": "[variables('identityServerAppName')]" },
+          "sampleAppName": { "value": "[variables('sampleAppName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "sampleAppTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'identityServerTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-sample-web-app.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "vnetName": { "value": "[variables('vnetName')]" },
+          "workspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "paasSubnetName": { "value": "[variables('paasSubnetName')]" },
+          "serverFarmId": { "value": "[reference('appServicePlanTemplate').outputs['serverFarmId'].value]" },
+          "privateDnsZoneName": { "value": "[reference('appServicePlanTemplate').outputs['privateDnsZoneName'].value]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
+          "identityServerAppName": { "value": "[reference('identityServerTemplate').outputs['identityServerAppName'].value]" },
+          "apiManagementName": { "value": "[reference('apimTemplate').outputs['apimName'].value]" },
+          "apiManagementSubscriptionKey": { "value": "[reference('apimTemplate').outputs['apimSubscriptionKey'].value]" },
+          "appName": { "value": "[variables('sampleAppName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "wafTemplate",
+      "condition": "[equals(true(), parameters('deployWaf'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-waf.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "wafSubnetName": { "value": "[variables('wafSubnetName')]" },
+          "apimFqdn": { "value": "[reference('apimTemplate').outputs['apimFqdn'].value]" },
+          "apimPrivateIp": { "value": "[reference('apimTemplate').outputs['apimPrivateIp'].value]" },
+          "logAnalyticsWorkspaceId": { "value": "[reference('networksTemplate').outputs['workspaceId'].value]" },
+          "hostname": { "value": "[parameters('wafHostname')]" },
+          "pfxContents": { "value": "[parameters('wafPfxContents')]" },
+          "pfxPassword": { "value": "[parameters('wafPfxPassword')]" }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "LogicAppName": {
+      "type": "string",
+      "value": "[reference('logicAppTemplate').outputs['logicAppName'].value]"
+    },
+    "ApiManagementName": {
+      "type": "string",
+      "value": "[reference('apimTemplate').outputs['apimName'].value]"
+    },
+    "AksApplicationInsightsConnectionString": {
+      "type": "string",
+      "value": "[reference('aksTemplate').outputs['applicationInsightsConnectionString'].value]"
+    },
+    "IdentityAppName": {
+      "type": "string",
+      "value": "[reference('identityServerTemplate').outputs['identityServerAppName'].value]"
+    },
+    "FunctionAppName": {
+      "type": "string",
+      "value": "[reference('appServicePlanTemplate').outputs['soapApiName'].value]"
+    },
+    "AcrUri": {
+      "type": "string",
+      "value": "[reference('aksTemplate').outputs['acrName'].value]"
+    },
+    "SoapEndpoint": {
+      "type": "string",
+      "value": "https://api.poc.internal/country/ws"
+    },
+    "SampleWebApp": {
+      "type": "string",
+      "value": "[reference('sampleAppTemplate').outputs['appName'].value]"
+    }
+  }
+}

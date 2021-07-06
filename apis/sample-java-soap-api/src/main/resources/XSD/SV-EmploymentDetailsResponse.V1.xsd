@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<xsd:schema
+	targetNamespace="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Response"
+	xmlns="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Response"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified"
+	xmlns:Q1="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Results" xmlns:pref="EmploymentDetailsResponse.V1.xsd"
+	xmlns:Q2="http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSRESPONSE.V1">
+
+	<xsd:import schemaLocation="SV-EmploymentDetailsResults.V1.xsd"
+		namespace="http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Results">
+	</xsd:import>
+
+	<xsd:import schemaLocation="EmploymentDetailsResponse.V1.xsd" namespace="http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSRESPONSE.V1"></xsd:import>
+	
+	<xsd:element name="EmploymentDetailsResponseMessage">
+	<xsd:complexType>
+		<xsd:sequence>
+
+			<xsd:element name="EmploymentDetailsResponse"
+				type="Q2:EmploymentDetailsResponseType" minOccurs="0" maxOccurs="1">
+			</xsd:element>
+			<xsd:element name="EmploymentDetailsResponseResults"
+				type="Q1:ResultsType" minOccurs="0" maxOccurs="1">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

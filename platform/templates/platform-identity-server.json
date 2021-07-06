@@ -1,0 +1,147 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetId": { "type": "string" },
+    "vnetName": { "type": "string" },
+    "workspaceId": { "type": "string" },
+    "paasSubnetName": { "type": "string" },
+    "serverFarmId": { "type": "string" },
+    "privateDnsZoneName": { "type": "string" },
+    "privateLinkSubnetName": { "type": "string" },
+    "resourcePrefix": { "type": "string" },
+    "appName": { "type": "string" },
+    "sampleAppName": { "type": "string" }
+  },
+  "variables": {
+    "appInsightsName": "[concat(parameters('resourcePrefix'), 'identityserver', uniqueString(resourceGroup().id), '-appi')]",
+    "privateEndpointName": "[concat(parameters('appName'), 'plink')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('appInsightsName')]",
+      "type": "microsoft.insights/components",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2020-02-02-preview",
+      "properties": {
+        "ApplicationId": "[parameters('appName')]",
+        "Application_Type": "webapp",
+        "WorkspaceResourceId": "[parameters('workspaceId')]"
+      }
+    },
+    {
+      "name": "[parameters('appName')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-12-01",
+      "location": "[resourceGroup().location]",
+      "kind": "webapp",
+      "dependsOn": [
+        "[variables('appInsightsName')]"
+      ],
+      "properties": {
+        "siteConfig": {
+          "alwaysOn": true,
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(variables('appInsightsName')).InstrumentationKey]"
+            },
+            {
+              "name": "WEBSITE_ENABLE_SYNC_UPDATE_SITE",
+              "value": true
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": 1
+            },
+            {
+              "name": "KnownClients:Clients:frontend-1:redirects:1",
+              "value": "[concat('https://', parameters('sampleAppName'), '.azurewebsites.net/signin-oidc')]"
+            },
+            {
+              "name": "ASPNETCORE_ENVIRONMENT",
+              "value": "Development"
+            }
+          ]
+        },
+        "serverFarmId": "[parameters('serverFarmId')]"
+      },
+      "resources": [
+        {
+          "type": "networkConfig",
+          "apiVersion": "2019-08-01",
+          "name": "virtualNetwork",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+          ],
+          "properties": {
+            "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('paasSubnetName'))]",
+            "isSwift": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2019-04-01",
+      "name": "[variables('privateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[concat(parameters('vnetId'), '/subnets/', parameters('privateLinkSubnetName'))]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[concat('privatelinkconnection', parameters('appName'))]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', parameters('appName'))]",
+              "groupIds": [
+                "sites"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-01-01",
+      "name": "[concat(parameters('privateDnsZoneName'), '/', parameters('privateDnsZoneName'), '-link')]",
+      "location": "global",
+      "properties": {
+        "registrationEnabled": "false",
+        "virtualNetwork": {
+          "id": "[parameters('vnetId')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(variables('privateEndpointName'),'/dnsgroupname')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('privateEndpointName')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "identityServerAppName": {
+      "type": "string",
+      "value": "[parameters('appName')]"
+    }
+  }
+}

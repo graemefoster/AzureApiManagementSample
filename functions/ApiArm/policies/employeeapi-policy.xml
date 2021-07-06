@@ -1,0 +1,50 @@
+<policies>
+    <inbound>
+        <base />
+        <set-backend-service id="apim-generated-policy" backend-id="rest-to-soap-function-backend" />
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+            <openid-config url="https://{{AUTHENTICATION_SERVER_NAME}}.azurewebsites.net/.well-known/openid-configuration" />
+            <audiences>
+                <audience>api-1</audience>
+            </audiences>
+            <required-claims>
+                <claim name="scope" match="all" separator=",">
+                    <value>employee-apis</value>
+                </claim>
+            </required-claims>
+        </validate-jwt>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <set-header name="ErrorSource" exists-action="override">
+            <value>@(context.LastError.Source)</value>
+        </set-header>
+        <set-header name="ErrorReason" exists-action="override">
+            <value>@(context.LastError.Reason)</value>
+        </set-header>
+        <set-header name="ErrorMessage" exists-action="override">
+            <value>@(context.LastError.Message)</value>
+        </set-header>
+        <set-header name="ErrorScope" exists-action="override">
+            <value>@(context.LastError.Scope)</value>
+        </set-header>
+        <set-header name="ErrorSection" exists-action="override">
+            <value>@(context.LastError.Section)</value>
+        </set-header>
+        <set-header name="ErrorPath" exists-action="override">
+            <value>@(context.LastError.Path)</value>
+        </set-header>
+        <set-header name="ErrorPolicyId" exists-action="override">
+            <value>@(context.LastError.PolicyId)</value>
+        </set-header>
+        <set-header name="ErrorStatusCode" exists-action="override">
+            <value>@(context.Response.StatusCode.ToString())</value>
+        </set-header>
+        <base />
+    </on-error>
+</policies>

@@ -1,0 +1,67 @@
+name: "Platform"
+
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - platform
+
+variables:
+- group: Platform-POC
+
+stages:
+
+- stage: 'PreparePlatform'
+  displayName: 'Preparing platform deployment'
+  jobs:
+  - job: 'EnsureStorageAccount'
+    pool:
+      vmImage: 'ubuntu-latest'  
+    steps:
+    - task: AzurePowerShell@5
+      name: 'UploadArm'
+      displayName: 'Create storage for nested ARM template deployment'
+      inputs:
+        azureSubscription: 'PoCServiceConnection'
+        scriptType: 'filePath'
+        scriptPath: './platform/Create-PreRequisites.ps1'
+        workingDirectory: './platform'
+        azurePowerShellVersion: latestVersion
+        scriptArguments: 
+          -ResourceGroupName '$(ResourceGroup)' `
+          -ResourcePrefix '$(ResourcePrefix)' `
+          -Location '$(Location)'
+
+- stage: 'DeployToPoCEnvironment'
+  dependsOn: PreparePlatform
+  displayName: "Deploy to PoC environment"
+  jobs:
+  - deployment: "DeployARMTemplate"
+    environment: 'PoC'
+    displayName: "Deploy ARM template"
+    variables:
+      armUri: $[ stageDependencies.PreparePlatform.EnsureStorageAccount.outputs['UploadArm.BlobUri'] ]
+      armSas: $[ stageDependencies.PreparePlatform.EnsureStorageAccount.outputs['UploadArm.SasToken'] ]
+      armBaseUri: $[ stageDependencies.PreparePlatform.EnsureStorageAccount.outputs['UploadArm.ContainerUri'] ]
+      jumpboxPublicKey: $[ replace(stageDependencies.PreparePlatform.EnsureStorageAccount.outputs['UploadArm.JumpboxPublicKey'], '"', '')]
+      devopsAgentPublicKey: $[ replace(stageDependencies.PreparePlatform.EnsureStorageAccount.outputs['UploadArm.DevopsAgentPublicKey'], '"', '')]
+    strategy:
+        runOnce:
+          deploy:
+            steps:
+            - task: AzureResourceManagerTemplateDeployment@3
+              displayName: 'Deploy platform resources'
+              inputs:
+                  deploymentScope: 'Resource Group'
+                  azureResourceManagerConnection: 'PoCServiceConnection'
+                  subscriptionId: '$(Subscription)'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: '$(ResourceGroup)'
+                  location: '$(Location)'
+                  templateLocation: 'URL of the file'
+                  csmFileLink: '$(armUri)$(armSas)'
+                  overrideParameters: '-storageBaseUri "$(armBaseUri)/" -templateSasKey "$(armSas)" -jumpboxPublicKey "$(jumpboxPublicKey)" -devopsAgentPublicKey "$(devopsAgentPublicKey)" -storageAccountName "$(ResourcePrefix)stg"  -resourcePrefix "$(ResourcePrefix)" -publisherEmail "$(ApimPublisherEmail)" -devopsServerUrl "$(DevopsServerUrl)" -devopsServerPAT "$(DevopsServerPAT)"'
+                  deploymentMode: 'Incremental' #Complete does not work - https://www.huuhka.net/automating-azure-private-link-storage-private-endpoints/
+                  deploymentOutputs: 'PlatformArmOutputs'

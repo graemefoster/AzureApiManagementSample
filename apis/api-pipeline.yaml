@@ -1,0 +1,67 @@
+name: "Apis"
+
+pool:
+  name: Default
+
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - apis
+
+variables:
+- group: Runtime-POC
+
+stages:
+- stage: 'BuildAndPushDockerContainer'
+  displayName: 'Build and push container to ACR'
+  pool:
+    vmImage: ubuntu-16.04
+  jobs:
+  - job: 'BuildAndPushDotNetCoreApiToAcr'
+    steps:
+    - task: Docker@2
+      displayName: Build and push dotnet 5 api to ACR
+      inputs:
+        command: buildAndPush
+        repository: SampleApi
+        dockerfile: ./apis/sample-api/Dockerfile
+        containerRegistry: PoCAcrServiceConnection
+        tags: |
+          latest
+          $(Build.BuildId)
+  - job: 'BuildAndPushJavaApiToAcr'
+    steps:
+    - task: Docker@2
+      displayName: Build and push Java Soap Api to ACR
+      inputs:
+        command: buildAndPush
+        repository: SampleJavaSoapApi
+        dockerfile: ./apis/sample-java-soap-api/Dockerfile
+        containerRegistry: PoCAcrServiceConnection
+        tags: |
+          latest
+          $(Build.BuildId)
+  - job: 'CaptureKubernetesDeploymentManfifests'
+    steps:
+    - publish: $(System.DefaultWorkingDirectory)/apis/k8s/
+      artifact: ApiManifest
+
+- stage: 'DeployToAKS'
+  dependsOn: BuildAndPushDockerContainer
+  displayName: "Deploy APIs"
+  jobs:
+  - deployment: "DeployApiToAks"
+    environment: 'PoC'
+    displayName: "Deploy Api to AKS"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Would prefer to use the Kubernetes manifest task but it needs access to k8s control plane to setup, and it doesn't work on the private cluster.
+          - script: "sed -i 's~:latest~:$(Build.BuildId)~g; s~|APPLICATIONINSIGHTS_CONNECTION_STRING|~$(AksApplicationInsightsConnectionString)~g; s~|ACR_NAME|~$(ImageRepository)~g' $(Pipeline.Workspace)/ApiManifest/deploy-api.yaml && kubectl apply -f $(Pipeline.Workspace)/ApiManifest/deploy-api.yaml"
+          - script: "sed -i 's~:latest~:$(Build.BuildId)~g; s~|APPLICATIONINSIGHTS_CONNECTION_STRING|~$(AksApplicationInsightsConnectionString)~g; s~|ACR_NAME|~$(ImageRepository)~g' $(Pipeline.Workspace)/ApiManifest/deploy-java-soap-api.yaml && kubectl apply -f $(Pipeline.Workspace)/ApiManifest/deploy-java-soap-api.yaml"
+  
+

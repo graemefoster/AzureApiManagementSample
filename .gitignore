@@ -1,0 +1,12 @@
+bin/
+debug/
+release/
+.idea/
+.vscode/
+
+.vs/
+obj/
+.~vsdx
+
+platform/*.crt
+platform/*.key

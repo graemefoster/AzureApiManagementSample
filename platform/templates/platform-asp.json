@@ -1,0 +1,233 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetId": { "type": "string" },
+    "vnetName": { "type": "string" },
+    "workspaceId": { "type": "string" },
+    "paasSubnetName": { "type": "string" },
+    "storageAccountName": { "type": "string" },
+    "privateLinkSubnetName": { "type": "string" },
+    "resourcePrefix": { "type": "string" },
+    "apiName": { "type": "string" },
+    "keyVaultName": { "type": "string" },
+    "soapEndpoint": { "type": "string" },
+    "soapApiPasswordSecretName": { "type": "string" },
+    "functionCodeSecretName": { "type": "string" }
+  },
+  "variables": {
+    "appServicePlanName": "[concat(parameters('resourcePrefix'),uniqueString(resourceGroup().id), '-asp')]",
+    "appInsightsName": "[concat(parameters('resourcePrefix'), 'functions', uniqueString(resourceGroup().id, '-appi'))]",
+    "privateDnsZoneName": "privatelink.azurewebsites.net",
+    "privateEndpointName": "[concat(parameters('apiName'), '-plink')]",
+    "soapApiPassword": "this-is-a-sample-password"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('appServicePlanName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "P1v3"
+      },
+      "kind": "windows"
+    },
+    {
+      "name": "[variables('appInsightsName')]",
+      "type": "microsoft.insights/components",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2020-02-02-preview",
+      "properties": {
+        "ApplicationId": "[parameters('apiName')]",
+        "Application_Type": "functions",
+        "WorkspaceResourceId": "[parameters('workspaceId')]",
+        "SamplingPercentage" : 5
+      }
+    },
+    {
+      "name": "[parameters('apiName')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-12-01",
+      "location": "[resourceGroup().location]",
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[variables('appInsightsName')]"
+      ],
+      "properties": {
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=',listKeys(resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(variables('appInsightsName')).InstrumentationKey]"
+            },
+            {
+              "name": "WEBSITE_ENABLE_SYNC_UPDATE_SITE",
+              "value": true
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": 1
+            },
+            {
+              "name": "ApiPoc:Employee:SystemUser",
+              "value": "sysuser012345"
+            },
+            {
+              "name": "ApiPoc:Employee:SystemPassword",
+              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('soapApiPasswordSecretName')), '2019-09-01').secretUri, ')')]"
+            },
+            {
+              "name": "ApiPoc:Employee:Endpoint",
+              "value": "[parameters('soapEndpoint')]"
+            }
+          ],
+          "alwaysOn": true
+        },
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      },
+      "resources": [
+        {
+          "type": "networkConfig",
+          "apiVersion": "2019-08-01",
+          "name": "virtualNetwork",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+          ],
+          "properties": {
+            "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('paasSubnetName'))]",
+            "isSwift": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2019-04-01",
+      "name": "[variables('privateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[concat(parameters('vnetId'), '/subnets/', parameters('privateLinkSubnetName'))]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[concat('privatelinkconnection', parameters('apiName'))]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', parameters('apiName'))]",
+              "groupIds": [
+                "sites"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-01-01",
+      "name": "[variables('privateDnsZoneName')]",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-01-01",
+      "name": "[concat(variables('privateDnsZoneName'), '/', variables('privateDnsZoneName'), '-link')]",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+      ],
+      "properties": {
+        "registrationEnabled": "false",
+        "virtualNetwork": {
+          "id": "[parameters('vnetId')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(variables('privateEndpointName'),'/dnsgroupname')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('privateDnsZoneName')]",
+        "[variables('privateEndpointName')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[concat(parameters('keyvaultName'), '/', parameters('soapApiPasswordSecretName'))]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2019-09-01",
+      "properties": {
+        "value": "[variables('soapApiPassword')]"
+      }
+    },
+    {
+      "name": "[concat(parameters('keyvaultName'), '/', parameters('functionCodeSecretName'))]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2019-09-01",
+      "properties": {
+        "value": "[listkeys(concat('Microsoft.Web/sites/', parameters('apiName'), '/host/default/'),'2016-08-01').functionKeys.default]"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[guid(concat(parameters('apiName'), '-read-', parameters('keyVaultName')))]",
+      "scope": "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4633458b-17de-408a-b874-0445c86b69e6')]",
+        "principalId": "[reference(concat('Microsoft.Web/sites/', parameters('apiName')), '2016-08-01', 'Full').identity.principalId]"
+      }
+    }
+  ],
+  "outputs": {
+    "privateDnsZoneName": {
+      "type": "string",
+      "value": "[variables('privateDnsZoneName')]"
+    },
+    "serverFarmId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+    },
+    "soapApiName": {
+      "type": "string",
+      "value": "[parameters('apiName')]"
+    }
+  }
+}

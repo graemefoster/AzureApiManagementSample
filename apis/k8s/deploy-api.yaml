@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-api-deployment
+  labels:
+    app: sample-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-api
+  template:
+    metadata:
+      labels:
+        app: sample-api
+    spec:
+      containers:
+      - name: sample-api
+        image: "|ACR_NAME|/sampleapi:latest"
+        ports:
+          - containerPort: 5000
+            protocol: TCP
+        env:
+          - name: ASPNETCORE_URLS
+            value: http://+:5000
+          - name: APPINSIGHTS_INSTRUMENTATIONKEY
+            value: "|APPLICATIONINSIGHTS_CONNECTION_STRING|"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-api-service
+spec:
+  selector:
+    app: sample-api
+  ports:
+    - protocol: TCP
+      port: 5678
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-api-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  tls:
+  - hosts:
+    - api.poc.internal
+    secretName: aks-ingress-tls
+  rules:
+  - host: api.poc.internal
+    http:
+      paths:
+        - path: /weather(/|$)(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: sample-api-service
+              port:
+                number: 5678

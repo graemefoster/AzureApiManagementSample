@@ -1,0 +1,40 @@
+﻿@model TestOidcWebApp.Features.Employee.EmployeeModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<form method="POST" asp-controller="Employee" asp-action="Index">
+    <div class="form-group">
+        <label for="employmentNumber">Employment Number</label>
+        <input type="text" name="employmentNumber" placeholder="12345678">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+<hr/>
+
+@if (Model?.Summary != null)
+{
+    <table class="table table-bordered">
+        <tr>
+            <th>Employment Number</th>
+            <th>Email</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td>
+                @Model.EmploymentNumber
+            </td>
+            <td>
+                @Model.Summary.EmailAddress
+            </td>
+            <td>
+                <a asp-controller="Employee" asp-action="Details" asp-route-employmentNumber="@Model.EmploymentNumber">Details</a>
+            </td>
+        </tr>
+    </table>
+}
+else if (!string.IsNullOrWhiteSpace(Model?.EmploymentNumber))
+{
+    <h3>No results found for @Model?.EmploymentNumber</h3>
+}

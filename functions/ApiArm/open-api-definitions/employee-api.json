@@ -1,0 +1,450 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Azure Functions OpenAPI Extension",
+    "version": "1.0.0"
+  },
+  "host": "localhost:7071",
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/{employmentNumber}/address": {
+      "get": {
+        "tags": [
+          "Employee"
+        ],
+        "operationId": "EmployeeAddressDetails",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employmentNumber",
+            "description": "employmentNumber Identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Details of the errors that occurred",
+            "schema": {
+              "$ref": "#/definitions/errorsResponse"
+            }
+          },
+          "200": {
+            "description": "The OK response",
+            "schema": {
+              "$ref": "#/definitions/employeeSummary"
+            }
+          }
+        }
+      }
+    },
+    "/{employmentNumber}/awards": {
+      "get": {
+        "tags": [
+          "employee"
+        ],
+        "operationId": "EmploymentAndAwards",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employmentNumber",
+            "description": "Employment Number",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Details of the errors that occurred",
+            "schema": {
+              "$ref": "#/definitions/errorsResponse"
+            }
+          },
+          "200": {
+            "description": "The OK response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/employmentAwardsType"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{employmentNumber}/awards/{id}": {
+      "get": {
+        "tags": [
+          "Employee"
+        ],
+        "operationId": "RunEmployeeAward",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employmentNumber",
+            "description": "employmentNumber Identifier",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Award identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Details of the errors that occurred",
+            "schema": {
+              "$ref": "#/definitions/errorsResponse"
+            }
+          },
+          "200": {
+            "description": "The OK response",
+            "schema": {
+              "$ref": "#/definitions/employmentAwardsType"
+            }
+          }
+        }
+      }
+    },
+    "/{employmentNumber}": {
+      "get": {
+        "tags": [
+          "Employee"
+        ],
+        "operationId": "EmployeeDetails",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employmentNumber",
+            "description": "employmentNumber Identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Details of the errors that occurred",
+            "schema": {
+              "$ref": "#/definitions/errorsResponse"
+            }
+          },
+          "200": {
+            "description": "The OK response",
+            "schema": {
+              "$ref": "#/definitions/employeeSummary"
+            },
+            "examples": {
+              "application/json": "{\"employmentNumber\":\"12345678\",\"residentialAddress\":{\"addressLine\":[\"100 Acacia Avenue\"],\"city\":\"Perth\",\"state\":\"WA\",\"postCode\":\"6000\",\"country\":\"Australia\"},\"postalAddress\":{\"addressLine\":[\"100 Acacia Avenue\"],\"city\":\"Perth\",\"state\":\"WA\",\"postCode\":\"6000\",\"country\":\"Australia\"},\"phone\":[{\"type\":0,\"number\":\"01234567891\"}],\"emailAddress\":\"fred.fibnar@fred.com\"}"
+            }
+          }
+        }
+      }
+    },
+    "/{employmentNumber}/phone": {
+      "get": {
+        "tags": [
+          "Employee"
+        ],
+        "operationId": "EmployeePhoneDetails",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employmentNumber",
+            "description": "employmentNumber Identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Details of the errors that occurred",
+            "schema": {
+              "$ref": "#/definitions/errorsResponse"
+            }
+          },
+          "200": {
+            "description": "Phone details",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/phoneType"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{employmentNumber}/employment-details": {
+      "get": {
+        "tags": [
+          "Employee"
+        ],
+        "operationId": "EmployeeEmploymentDetails",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employmentNumber",
+            "description": "employmentNumber Identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Details of the errors that occurred",
+            "schema": {
+              "$ref": "#/definitions/errorsResponse"
+            }
+          },
+          "200": {
+            "description": "Employment details",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/employmentDetailsType"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/weather/{postcode}": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "operationId": "WeatherLookup",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postcode",
+            "description": "Postcode",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Last 7 days of weather",
+            "schema": {
+              "$ref": "#/definitions/weather"
+            },
+            "examples": {
+              "application/json": "{\"postcode\":\"6000\",\"temperatures\":[{\"daysAgo\":0,\"celsiusMin\":29.771606,\"celsiusMax\":36.274372},{\"daysAgo\":1,\"celsiusMin\":19.997177,\"celsiusMax\":42.81925},{\"daysAgo\":2,\"celsiusMin\":27.146305,\"celsiusMax\":38.73523},{\"daysAgo\":3,\"celsiusMin\":25.754646,\"celsiusMax\":42.899296},{\"daysAgo\":4,\"celsiusMin\":25.840908,\"celsiusMax\":40.906696},{\"daysAgo\":5,\"celsiusMin\":20.498775,\"celsiusMax\":42.839108},{\"daysAgo\":6,\"celsiusMin\":19.409178,\"celsiusMax\":31.885996}]}"
+            }
+          },
+          "404": {
+            "description": "No such postcode"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "addressType": {
+      "type": "object",
+      "properties": {
+        "addressLine": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "postCode": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        }
+      }
+    },
+    "employeeSummary": {
+      "type": "object",
+      "properties": {
+        "employmentNumber": {
+          "type": "string"
+        },
+        "residentialAddress": {
+          "$ref": "#/definitions/addressType"
+        },
+        "postalAddress": {
+          "$ref": "#/definitions/addressType"
+        },
+        "phone": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/phoneType"
+          }
+        },
+        "emailAddress": {
+          "type": "string"
+        }
+      }
+    },
+    "employmentAwardsType": {
+      "type": "object",
+      "properties": {
+        "approvalDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "approvalDateSpecified": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string"
+        },
+        "awardTitle": {
+          "type": "string"
+        }
+      }
+    },
+    "employmentDetailsType": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "startDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDateSpecified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "source": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sourceItem"
+          }
+        }
+      }
+    },
+    "errorsResponse": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/error"
+          }
+        }
+      }
+    },
+    "phoneType": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "format": "int32",
+          "default": 0,
+          "enum": [
+            0,
+            1
+          ],
+          "type": "integer"
+        },
+        "number": {
+          "type": "string"
+        }
+      }
+    },
+    "sourceItem": {
+      "type": "object",
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "parameter": {
+          "type": "string"
+        }
+      }
+    },
+    "temperature": {
+      "type": "object",
+      "properties": {
+        "daysAgo": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "celsiusMin": {
+          "format": "float",
+          "type": "number"
+        },
+        "celsiusMax": {
+          "format": "float",
+          "type": "number"
+        }
+      }
+    },
+    "weather": {
+      "type": "object",
+      "properties": {
+        "postcode": {
+          "type": "string"
+        },
+        "temperatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/temperature"
+          }
+        }
+      }
+    }
+  }
+}

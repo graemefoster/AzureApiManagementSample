@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<xsd:schema elementFormDefault="qualified" targetNamespace="http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSFAULT.V1" xmlns="http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSFAULT.V1" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="EmploymentDetailsFault">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element maxOccurs="1" minOccurs="1" name="errorType">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="Business"/>
+              <xsd:enumeration value="Security"/>
+              <xsd:enumeration value="System"/>
+              <xsd:enumeration value="Validation"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element maxOccurs="1" minOccurs="1" name="errorMsgID" type="xsd:integer"/>
+        <xsd:element maxOccurs="1" minOccurs="1" name="errorText" type="xsd:string"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

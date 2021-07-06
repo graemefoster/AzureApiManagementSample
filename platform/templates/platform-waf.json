@@ -1,0 +1,221 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcePrefix": { "type": "string" },
+        "vnetId": { "type": "string" },
+        "wafSubnetName": { "type": "string" },
+        "apimFqdn": { "type": "string" },
+        "logAnalyticsWorkspaceId": { "type": "string" },
+        "apimPrivateIp": { "type": "string" },
+        "hostname": { "type": "string" },
+        "pfxContents": { "type": "securestring" },
+        "pfxPassword": { "type": "securestring" }
+    },
+    "variables": {
+        "publicIPAddressName": "[concat(parameters('resourcePrefix'), '-waf-pip')]",
+        "wafName": "[concat(parameters('resourcePrefix'), '-waf')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            }
+        },
+        {
+            "type": "Microsoft.Network/applicationGateways",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "name": "[variables('wafName')]",
+            "properties": {
+                "sku": {
+                    "tier": "WAF_v2",
+                    "name": "WAF_v2"
+                },
+                "autoscaleConfiguration": {
+                    "minCapacity": 1,
+                    "maxCapacity": 2
+                },
+                "frontendIPConfigurations": [
+                    {
+                        "name": "default-frontend-ip",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "apim-backend-pool",
+                        "properties": {
+                            "backendAddresses": [
+                                {
+                                    "ipAddress": "[parameters('apimPrivateIp')]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "apim-backend-settings",
+                        "properties": {
+                            "probe": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/probes', variables('wafName'), 'apim-backend-probe')]"
+                            },
+                            "protocol": "Https",
+                            "hostName": "[parameters('apimFqdn')]",
+                            "port": 443,
+                            "pickHostNameFromBackendAddress": false
+                        }
+                    }
+                ],
+                "requestRoutingRules": [
+                    {
+                        "name": "apim-route",
+                        "properties": {
+                            "ruleType": "Basic",
+                            "backendAddressPool": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('wafName'), 'apim-backend-pool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('wafName'), 'apim-backend-settings')]"
+                            },
+                            "httpListener": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('wafName'), 'default-listener')]"
+                            }
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "default-listener",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('wafName'), 'default-frontend-ip')]"
+                            },
+                            "protocol": "Https",
+                            "frontendPort": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('wafName'), 'default-frontend-port')]"
+                            },
+                            "sslCertificate": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/sslCertificates', variables('wafName'), 'default-tls')]"
+                            },
+                            "hostName": "[parameters('hostname')]"
+                        }
+                    }
+                ],
+                "sslCertificates": [
+                    {
+                        "name": "default-tls",
+                        "properties": {
+                            "data": "[parameters('pfxContents')]",
+                            "password": "[parameters('pfxPassword')]"
+                        }
+                    }
+                ],
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "default-gateway-ip-configuration",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(parameters('vnetId'), '/subnets/', parameters('wafSubnetName'))]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "default-frontend-port",
+                        "properties": {
+                            "port": 443
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "apim-backend-probe",
+                        "properties": {
+                            "port": 443,
+                            "pickHostNameFromBackendHttpSettings": true,
+                            "protocol": "Https",
+                            "path": "/",
+                            "interval": 60,
+                            "match": {
+                                "statusCodes": [
+                                    "404"
+                                ]
+                            },
+                            "timeout": 5
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[variables('publicIPAddressName')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/applicationGateways/providers/diagnosticSettings",
+            "apiVersion": "2017-05-01-preview",
+            "name": "[concat(variables('wafName'), '/Microsoft.Insights/service')]",
+            "dependsOn": [
+                "[variables('wafName')]"
+            ],
+            "properties": {
+                "workspaceId": "[ parameters('logAnalyticsWorkspaceId')]",
+                "metrics": [
+                    {
+                        "category": "AllMetrics",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 1,
+                            "enabled": false
+                        },
+                        "timeGrain": null
+                    }
+                ],
+                "logs": [
+                    {
+                        "category": "ApplicationGatewayAccessLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 1,
+                            "enabled": false
+                        },
+                        "timeGrain": null
+                    },
+                    {
+                        "category": "ApplicationGatewayPerformanceLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 1,
+                            "enabled": false
+                        },
+                        "timeGrain": null
+                    },
+                    {
+                        "category": "ApplicationGatewayFirewallLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 1,
+                            "enabled": false
+                        },
+                        "timeGrain": null
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+    }
+}

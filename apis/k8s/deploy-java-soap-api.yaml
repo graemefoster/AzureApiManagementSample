@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-java-soap-api-deployment
+  labels:
+    app: sample-java-soap-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-java-soap-api
+  template:
+    metadata:
+      labels:
+        app: sample-java-soap-api
+    spec:
+      containers:
+      - name: sample-java-soap-api
+        image: "|ACR_NAME|/samplejavasoapapi:latest"
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        env:
+          - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+            value: "|APPLICATIONINSIGHTS_CONNECTION_STRING|"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-java-soap-api-service
+spec:
+  selector:
+    app: sample-java-soap-api
+  ports:
+    - protocol: TCP
+      port: 5678
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-java-soap-api-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  tls:
+  - hosts:
+    - api.poc.internal
+    secretName: aks-ingress-tls
+  rules:
+  - host: api.poc.internal
+    http:
+      paths:
+        - path: /country(/|$)(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: sample-java-soap-api-service
+              port:
+                number: 5678

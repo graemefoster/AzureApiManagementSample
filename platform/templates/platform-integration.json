@@ -1,0 +1,149 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetId": { "type": "string" },
+        "vnetName": { "type": "string" },
+        "paasSubnetName": { "type": "string" },
+        "privateLinkSubnetName": { "type": "string" },
+        "storageAccountName": { "type": "string" },
+        "serverFarmId": { "type": "string" },
+        "privateDnsZoneName": { "type": "string " },
+        "workspaceId": { "type": "string" }
+    },
+    "variables": {
+        "logicAppName": "[concat('apipoclogicapp', uniqueString(resourceGroup().id))]",
+        "privateEndpointName": "[concat(variables('logicAppName'), 'plink')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[variables('logicAppName')]",
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp,workflowapp",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "dependsOn": [],
+            "properties": {
+                "name": "[variables('logicAppName')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "node"
+                        },
+                        {
+                            "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                            "value": "~12"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=',listKeys(resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                        },
+                        {
+                            "name": "AzureFunctionsJobHost__extensionBundle__id",
+                            "value": "Microsoft.Azure.Functions.ExtensionBundle.Workflows"
+                        },
+                        {
+                            "name": "AzureFunctionsJobHost__extensionBundle__version",
+                            "value": "[1.*, 2.0.0)"
+                        },
+                        {
+                            "name": "APP_KIND",
+                            "value": "workflowApp"
+                        },
+                        {
+                            "name": "FUNCTIONS_V2_COMPATIBILITY_MODE",
+                            "value": "true"
+                        }
+                    ],
+                    "use32BitWorkerProcess": true,
+                    "alwaysOn": true,
+                    "cors": {
+                        "allowedOrigins": [
+                            "https://afd.hosting.portal.azure.net",
+                            "https://afd.hosting-ms.portal.azure.net",
+                            "https://hosting.portal.azure.net",
+                            "https://ms.hosting.portal.azure.net",
+                            "https://ema-ms.hosting.portal.azure.net",
+                            "https://ema.hosting.portal.azure.net"
+                        ]
+                    }
+                },
+                "serverFarmId": "[parameters('serverFarmId')]",
+                "clientAffinityEnabled": false
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "resources": [
+                {
+                    "type": "networkConfig",
+                    "apiVersion": "2019-08-01",
+                    "name": "virtualNetwork",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('logicAppName'))]"
+                    ],
+                    "properties": {
+                        "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('paasSubnetName'))]",
+                        "isSwift": true
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2019-04-01",
+            "name": "[variables('privateEndpointName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('logicAppName'))]"
+            ],
+            "properties": {
+                "subnet": {
+                    "id": "[concat(parameters('vnetId'), '/subnets/', parameters('privateLinkSubnetName'))]"
+                },
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[concat('privatelinkconnection', variables('logicAppName'))]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', variables('logicAppName'))]",
+                            "groupIds": [
+                                "sites"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2020-03-01",
+            "name": "[concat(variables('privateEndpointName'),'/dnsgroupname')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('privateEndpointName')]"
+            ],
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "dnsConfig",
+                        "properties": {
+                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "logicAppName": {
+            "type": "string",
+            "value": "[variables('logicAppName')]"
+        }
+    }
+}

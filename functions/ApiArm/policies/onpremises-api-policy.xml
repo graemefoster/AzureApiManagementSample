@@ -1,0 +1,82 @@
+<policies>
+    <inbound>
+        <base />
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+            <openid-config url="https://{{AUTHENTICATION_SERVER_NAME}}.azurewebsites.net/.well-known/openid-configuration" />
+            <audiences>
+                <audience>api-1</audience>
+            </audiences>
+            <required-claims>
+                <claim name="scope" match="all" separator=",">
+                    <value>employee-apis</value>
+                </claim>
+            </required-claims>
+        </validate-jwt>
+        <set-backend-service id="apim-generated-policy" backend-id="onpremises-backend" />
+        <set-body>@{
+var s = (XNamespace)"http://www.w3.org/2003/05/soap-envelope";
+var o = (XNamespace)"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd";
+var u = (XNamespace)"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd";
+var h = (XNamespace)"http://xml.samplesoap/soa/assertions";
+var xsi = (XNamespace)"http://www.w3.org/2001/XMLSchema-instance";
+var xsd = (XNamespace)"http://www.w3.org/2001/XMLSchema";
+var m = (XNamespace)"http://xml.samplesoap/Schema/HumanResources/Employee/V1.0/Request";
+var m1 = (XNamespace)"http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSREQUEST.V1";
+
+
+return new XDocument(
+	new XElement(s + "Envelope",
+		new XElement(s + "Header", 
+			new XElement(h + "HandlingAssertion",
+				new XElement(h + "HandlingStatement")),
+		new XElement(o + "Security", 
+			new XAttribute(s + "mustUnderstand", 1),
+			new XElement(o + "UsernameToken", new XAttribute(u + "Id", Guid.NewGuid().ToString()),
+				new XElement(o + "Username", "sysuser012345"),
+				new XElement(o + "Password", new XAttribute("Type", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText"),
+					"{{OnPremisesApiProperties}}")))
+		),
+		new XElement(s + "Body",
+			new XElement(m + "EmploymentDetailsRequestMessage",
+				new XElement(m + "EmploymentDetailsRequest",
+					new XElement(m1 + "searchKey1",
+						new XElement(m1 + "EmploymentNumber", context.Request.MatchedParameters["employeeNumber"]),
+						new XElement(m1 + "dateOfBirth", "1980-01-01")
+						)
+					)
+				)
+			)
+		)
+	).ToString();
+}</set-body>
+        <rewrite-uri template="/" />
+        <set-method>POST</set-method>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <set-body>@{
+
+    var xdoc = context.Response.Body.As<XDocument>(); 
+    var ns = "http://xmlns.soapsample.com/schemas/EMPLOYMENTDETAILSRESPONSE.V1";
+    var nav = System.Xml.XPath.Extensions.CreateNavigator(xdoc);
+    var namespaceManager = new XmlNamespaceManager(nav.NameTable);
+    namespaceManager.AddNamespace("ns", ns);
+
+    string GetValue(string xpath)
+    {
+        return System.Xml.XPath.Extensions.XPathSelectElement(xdoc, xpath, namespaceManager)?.Value;
+    }
+
+    return JsonConvert.SerializeObject(new {
+        surname = GetValue("//ns:personalSummaryData/ns:emailAddress")
+    });
+
+}</set-body>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

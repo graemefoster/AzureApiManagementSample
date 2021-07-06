@@ -1,0 +1,66 @@
+name: "IdentityServer"
+
+pool:
+  name: Default
+
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - identity
+
+variables:
+- group: Runtime-POC
+
+stages:
+- stage: 'BuildIdentityServer'
+  displayName: 'Build and publish identity server'
+  pool:
+    vmImage: ubuntu-16.04
+  jobs:
+  - job: 'PublishIdentityServer'
+    steps:
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore project dependencies'
+      inputs:
+        command: 'restore'
+        projects: './identity/IdentityServer/IdentityServer.csproj'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build the project - release'
+      inputs:
+        command: 'build'
+        arguments: '--no-restore --configuration release'
+        projects: './identity/IdentityServer/IdentityServer.csproj'
+      
+    - task: DotNetCoreCLI@2
+      displayName: Publish dotnet 5 identity server IdentityServer.csproj
+      inputs:
+        command: 'publish'
+        arguments: '--no-build --no-restore --configuration release --output $(Build.ArtifactStagingDirectory)/release'
+        projects: './identity/IdentityServer/IdentityServer.csproj'
+        zipAfterPublish: true
+        publishWebProjects: false
+
+    - publish: $(Build.ArtifactStagingDirectory)/release/IdentityServer.zip
+      artifact: IdentityServer
+
+- stage: 'DeployFunctionsToAppServicePlan'
+  dependsOn: BuildIdentityServer
+  displayName: "Deploy IdentityServer"
+  jobs:
+  - deployment: "DeployIdentityServer"
+    environment: 'PoC'
+    displayName: "Deploy Identity Server to app service plan"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: AzureWebApp@1
+              inputs:
+                azureSubscription: PoCServiceConnection
+                appName: $(IdentityServerApp)
+                package: $(Pipeline.Workspace)/IdentityServer/IdentityServer.zip

@@ -1,0 +1,22 @@
+<policies>
+    <inbound>
+        <base />
+        <quota calls="100" renewal-period="3600" />
+        <rate-limit calls="5" renewal-period="30" remaining-calls-variable-name="remainingCallsPerSubscription" />
+        <cache-lookup vary-by-developer="false" vary-by-developer-groups="false" caching-type="internal" allow-private-response-caching="true">
+            <vary-by-header>Accept</vary-by-header>
+            <vary-by-header>Accept-Charset</vary-by-header>
+            <vary-by-header>Authorization</vary-by-header>
+        </cache-lookup>
+    </inbound>
+    <outbound>
+        <base />
+        <cache-store duration="20" />
+    </outbound>
+    <backend>
+        <base />
+    </backend>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

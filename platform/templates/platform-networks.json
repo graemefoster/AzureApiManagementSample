@@ -1,0 +1,308 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcePrefix": { "type": "string" },
+        "aksSubnetName": { "type": "string" },
+        "apimSubnetName": { "type": "string" },
+        "privateLinkSubnetName": { "type": "string" },
+        "managedIdentityName": { "type": "string" },
+        "wafSubnetName": { "type": "string" },
+        "vnetName": { "type": "string" },
+        "vnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "Address prefix"
+            }
+        },
+        "apimSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "APIM Subnet"
+            }
+        },
+        "aksSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "AKS Subnet"
+            }
+        },
+        "paasSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.2.0/24",
+            "metadata": {
+                "description": "PaaS Subnet"
+            }
+        },
+        "paasSubnetName": {
+            "type": "string",
+            "defaultValue": "paas-subnet",
+            "metadata": {
+                "description": "paas-subnet"
+            }
+        },
+        "devopSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.3.0/24",
+            "metadata": {
+                "description": "DevOps Subnet"
+            }
+        },
+        "devopSubnetName": {
+            "type": "string",
+            "defaultValue": "devops-subnet",
+            "metadata": {
+                "description": "devops-subnet"
+            }
+        },
+        "jumpboxSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.4.0/24",
+            "metadata": {
+                "description": "DevOps Subnet"
+            }
+        },
+        "privateLinkSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.5.0/24",
+            "metadata": {
+                "description": "Private Link Subnet"
+            }
+        },
+        "wafSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.6.0/24",
+            "metadata": {
+                "description": "WAF Subnet"
+            }
+        },
+        "jumpboxSubnetName": {
+            "type": "string",
+            "defaultValue": "jumpbox-subnet",
+            "metadata": {
+                "description": "jumpbox-subnet"
+            }
+        },
+        "utilitySubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.7.0/24",
+            "metadata": {
+                "description": "Utility Subnet"
+            }
+        },
+        "utilitySubnetName": {
+            "type": "string",
+            "defaultValue": "utility-subnet",
+            "metadata": {
+                "description": "utility-subnet"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        }
+    },
+    "variables": {
+        "logAnalyticsWorkspaceName": "[concat(parameters('resourcePrefix'), '-loga')]",
+        "jumpboxNetworkSecurityGroupName": "[concat(parameters('resourcePrefix'), '-jumpbox-nsg')]",
+        "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
+    },
+    "resources": [
+        {
+            "comments": "Simple Network Security Group for subnet [parameters('jumpboxSubnetName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-05-01",
+            "name": "[variables('jumpboxNetworkSecurityGroupName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-22",
+                        "properties": {
+                            "priority": 1000,
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "destinationPortRange": "22",
+                            "protocol": "Tcp",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('vnetName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [ "[variables('jumpboxNetworkSecurityGroupName')]" ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnetAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('apimSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('apimSubnetPrefix')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('aksSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('aksSubnetPrefix')]",
+                            "privateEndpointNetworkPolicies": "Disabled"
+                        }
+                    },
+                    {
+                        "name": "[parameters('paasSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('paasSubnetPrefix')]",
+                            "delegations": [
+                                {
+                                    "name": "delegation",
+                                    "properties": {
+                                        "serviceName": "Microsoft.Web/serverFarms",
+                                        "actions": [
+                                            "Microsoft.Network/virtualNetworks/subnets/action"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "[parameters('devopSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('devopSubnetPrefix')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('jumpboxSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('jumpboxSubnetPrefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('jumpboxNetworkSecurityGroupName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[parameters('privateLinkSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('privateLinkSubnetPrefix')]",
+                            "privateEndpointNetworkPolicies": "Disabled"
+                        }
+                    },
+                    {
+                        "name": "[parameters('wafSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('wafSubnetPrefix')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('utilitySubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('utilitySubnetPrefix')]",
+                            "delegations": [
+                                {
+                                    "name": "delegation",
+                                    "properties": {
+                                        "serviceName": "Microsoft.ContainerInstance/containerGroups",
+                                        "actions": [
+                                            "Microsoft.Network/virtualNetworks/subnets/action"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "resources": [
+                {
+                    "type": "providers/diagnosticSettings",
+                    "apiVersion": "2017-05-01-preview",
+                    "name": "[concat('/Microsoft.Insights/', 'Send to ', variables('logAnalyticsWorkspaceName'))]",
+                    "dependsOn": [
+                        "[parameters('vnetName')]",
+                        "[variables('logAnalyticsWorkspaceName')]"
+                    ],
+                    "properties": {
+                        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                        "metrics": [
+                            {
+                                "category": "AllMetrics",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                    "days": 0,
+                                    "enabled": false
+                                },
+                                "timeGrain": null
+                            }
+                        ],
+                        "logs": [
+                            {
+                                "category": "VMProtectionAlerts",
+                                "enabled": true
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "name": "[variables('logAnalyticsWorkspaceName')]",
+            "apiVersion": "2020-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "sku": {
+                    "name": "Free"
+                },
+                "retentionInDays": 7,
+                "features": {
+                    "searchVersion": 1,
+                    "legacy": 0,
+                    "enableLogAccessUsingOnlyResourcePermissions": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+            "apiVersion": "2018-11-30",
+            "name": "[parameters('managedIdentityName')]",
+            "location": "[parameters('location')]"
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2017-09-01",
+            "name": "1117b98b-1d4f-4787-a291-c67834d212e7",
+            "dependsOn": [ "[parameters('managedIdentityName')]" ],
+            "properties": {
+                "roleDefinitionId": "[variables('contributor')]",
+                "principalId": "[reference(parameters('managedIdentityName'), '2018-11-30').principalId]",
+                "scope": "[resourceGroup().id]"
+            }
+        }
+    ],
+    "outputs": {
+        "workspaceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.OperationalInsights/workspaces',variables('logAnalyticsWorkspaceName'))]"
+        },
+        "vnetId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+        }
+    }
+}
