@@ -57,7 +57,7 @@
   },
   "variables": {
     "apiManagementServiceName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'apim')]",
-    "appInsightsName": "[concat(parameters('resourcePrefix'), 'apiminsights', uniqueString(resourceGroup().id), '-appi')]",
+    "appInsightsName": "[concat(parameters('resourcePrefix'), '-apim-', uniqueString(resourceGroup().id), '-appi')]",
     "onPremisesGatewayName": "[concat(variables('apiManagementServiceName'), '-onprem-apim-gway')]"
   },
   "resources": [

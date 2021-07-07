@@ -17,7 +17,7 @@
   },
   "variables": {
     "appServicePlanName": "[concat(parameters('resourcePrefix'),uniqueString(resourceGroup().id), '-asp')]",
-    "appInsightsName": "[concat(parameters('resourcePrefix'), 'functions', uniqueString(resourceGroup().id), '-appi')]",
+    "appInsightsName": "[concat(parameters('resourcePrefix'), '-functions-', uniqueString(resourceGroup().id), '-appi')]",
     "privateDnsZoneName": "privatelink.azurewebsites.net",
     "privateEndpointName": "[concat(parameters('apiName'), '-plink')]",
     "soapApiPassword": "this-is-a-sample-password"

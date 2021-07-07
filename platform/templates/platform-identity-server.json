@@ -14,7 +14,7 @@
     "sampleAppName": { "type": "string" }
   },
   "variables": {
-    "appInsightsName": "[concat(parameters('resourcePrefix'), 'identityserver', uniqueString(resourceGroup().id), '-appi')]",
+    "appInsightsName": "[concat(parameters('resourcePrefix'), '-identityserver-', uniqueString(resourceGroup().id), '-appi')]",
     "privateEndpointName": "[concat(parameters('appName'), '-plink')]"
   },
   "resources": [
