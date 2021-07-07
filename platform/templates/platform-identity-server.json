@@ -15,7 +15,9 @@
   },
   "variables": {
     "appInsightsName": "[concat(parameters('appName'), '-appi')]",
-    "privateEndpointName": "[concat(parameters('appName'), '-plink')]"
+    "privateEndpointName": "[concat(parameters('appName'), '-plink')]",
+    "repoURL": "https://github.com/graemefoster/AzureApiManagementSample",
+    "repoProject": "identity\\IdentityServer\\IdentityServer.csproj"
   },
   "resources": [
     {
@@ -51,22 +53,40 @@
               "value": true
             },
             {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": 1
-            },
-            {
               "name": "KnownClients:Clients:frontend-1:redirects:1",
               "value": "[concat('https://', parameters('sampleAppName'), '.azurewebsites.net/signin-oidc')]"
             },
             {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": true
+            },
+            {
               "name": "ASPNETCORE_ENVIRONMENT",
               "value": "Development"
+            },
+            {
+              "name": "PROJECT",
+              "value": "[variables('repoProject')]"
             }
           ]
         },
         "serverFarmId": "[parameters('serverFarmId')]"
       },
       "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[variables('repoURL')]",
+            "branch": "main",
+            "project": "[variables('repoProject')]",
+            "IsManualIntegration": true
+          }
+        },
         {
           "type": "networkConfig",
           "apiVersion": "2019-08-01",
