@@ -30,7 +30,7 @@ jobs:
         with:
           push: true
           tags: ghcr.io/graemefoster/api-management-sample-java-soap-api:latest
-          context: /apis/sample-java-soap-api/Dockerfile
+          path: apis/sample-java-soap-api/
 
       -
         name: Image digest
