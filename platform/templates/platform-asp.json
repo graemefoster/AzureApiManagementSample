@@ -17,7 +17,7 @@
   },
   "variables": {
     "appServicePlanName": "[concat(parameters('resourcePrefix'),uniqueString(resourceGroup().id), '-asp')]",
-    "appInsightsName": "[concat(parameters('resourcePrefix'), 'functions', uniqueString(resourceGroup().id, '-appi'))]",
+    "appInsightsName": "[concat(parameters('resourcePrefix'), 'functions', uniqueString(resourceGroup().id), '-appi')]",
     "privateDnsZoneName": "privatelink.azurewebsites.net",
     "privateEndpointName": "[concat(parameters('apiName'), '-plink')]",
     "soapApiPassword": "this-is-a-sample-password"
@@ -35,7 +35,7 @@
     },
     {
       "name": "[variables('appInsightsName')]",
-      "type": "microsoft.insights/components",
+      "type": "Microsoft.Insights/components",
       "location": "[resourceGroup().location]",
       "apiVersion": "2020-02-02-preview",
       "properties": {
