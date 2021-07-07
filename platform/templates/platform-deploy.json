@@ -37,7 +37,7 @@
     "paasSubnetName": "[concat(parameters('resourcePrefix'), '-paas-subnet')]",
     "privateLinkSubnetName": "[concat(parameters('resourcePrefix'), '-privatelink-subnet')]",
     "wafSubnetName": "[concat(parameters('resourcePrefix'), '-waf-subnet')]",
-    "keyvaultName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'kv')]",
+    "keyvaultName": "[concat(parameters('resourcePrefix'), '-kv-', uniqueString(resourceGroup().id))]",
     "templateBaseUri": "[concat(parameters('storageBaseUri'), 'platform')]",
     "scriptBaseUri": "[concat(parameters('storageBaseUri'), 'script')]",
     "identityServerAppName": "[concat('sample-identityserver-', uniqueString(resourceGroup().id))]",

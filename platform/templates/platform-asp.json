@@ -20,7 +20,8 @@
     "appInsightsName": "[concat(parameters('resourcePrefix'), '-functions-', uniqueString(resourceGroup().id), '-appi')]",
     "privateDnsZoneName": "privatelink.azurewebsites.net",
     "privateEndpointName": "[concat(parameters('apiName'), '-plink')]",
-    "soapApiPassword": "this-is-a-sample-password"
+    "soapApiPassword": "this-is-a-sample-password",
+    "functionCodeSecretName":  "[concat(parameters('keyvaultName'), '/', parameters('functionCodeSecretName'))]"
   },
   "resources": [
     {
@@ -60,44 +61,6 @@
       ],
       "properties": {
         "siteConfig": {
-          "appSettings": [
-            {
-              "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=',listKeys(resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
-            },
-            {
-              "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "dotnet"
-            },
-            {
-              "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~3"
-            },
-            {
-              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(variables('appInsightsName')).InstrumentationKey]"
-            },
-            {
-              "name": "WEBSITE_ENABLE_SYNC_UPDATE_SITE",
-              "value": true
-            },
-            {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": 1
-            },
-            {
-              "name": "ApiPoc:Employee:SystemUser",
-              "value": "sysuser012345"
-            },
-            {
-              "name": "ApiPoc:Employee:SystemPassword",
-              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('soapApiPasswordSecretName')), '2019-09-01').secretUri, ')')]"
-            },
-            {
-              "name": "ApiPoc:Employee:Endpoint",
-              "value": "[parameters('soapEndpoint')]"
-            }
-          ],
           "alwaysOn": true
         },
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
@@ -195,7 +158,7 @@
       }
     },
     {
-      "name": "[concat(parameters('keyvaultName'), '/', parameters('functionCodeSecretName'))]",
+      "name": "[variables('functionCodeSecretName')]",
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2019-09-01",
       "properties": {
@@ -203,6 +166,25 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+      ]
+    },
+    {
+      "name": "appsettings",
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2020-12-01",
+      "properties": {
+        "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=',listKeys(resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+        "FUNCTIONS_EXTENSION_VERSION": "~3",
+        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(variables('appInsightsName')).InstrumentationKey]",
+        "WEBSITE_ENABLE_SYNC_UPDATE_SITE": true,
+        "WEBSITE_RUN_FROM_PACKAGE": 1,
+        "ApiPoc:Employee:SystemUser": "sysuser012345",
+        "ApiPoc:Employee:SystemPassword": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('soapApiPasswordSecretName')), '2019-09-01').secretUri, ')')]",
+        "ApiPoc:Employee:Endpoint": "[parameters('soapEndpoint')]"
+      },
+      "dependsOn": [
+        "[variables('functionCodeSecretName')]"
       ]
     },
     {
