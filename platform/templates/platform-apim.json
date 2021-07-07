@@ -53,12 +53,12 @@
         "description": "Enable automatic VM DNS registration in the zone"
       }
     },
-    "keyvaultName": { "type": "string" }
+    "keyvaultName": { "type": "string" },
+    "apiManagementServiceName": { "type": "string" }
   },
   "variables": {
-    "apiManagementServiceName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), '-apim')]",
     "appInsightsName": "[concat(parameters('resourcePrefix'), '-apim-', uniqueString(resourceGroup().id), '-appi')]",
-    "onPremisesGatewayName": "[concat(variables('apiManagementServiceName'), '-onprem-apim-gway')]"
+    "onPremisesGatewayName": "[concat(parameters('apiManagementServiceName'), '-onprem-apim-gway')]"
   },
   "resources": [
     {
@@ -67,14 +67,14 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2020-02-02-preview",
       "properties": {
-        "ApplicationId": "[variables('apiManagementServiceName')]",
+        "ApplicationId": "[parameters('apiManagementServiceName')]",
         "Application_Type": "apim",
         "WorkspaceResourceId": "[parameters('workspaceId')]"
       }
     },
     {
       "apiVersion": "2021-01-01-preview",
-      "name": "[variables('apiManagementServiceName')]",
+      "name": "[parameters('apiManagementServiceName')]",
       "type": "Microsoft.ApiManagement/service",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -96,9 +96,9 @@
         {
           "apiVersion": "2020-06-01-preview",
           "type": "loggers",
-          "name": "[concat(variables('apiManagementServiceName'), '-appinsights-logger')]",
+          "name": "[concat(parameters('apiManagementServiceName'), '-appinsights-logger')]",
           "dependsOn": [
-            "[concat('Microsoft.ApiManagement/service/', variables('apiManagementServiceName'))]",
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]",
             "[concat('Microsoft.Insights/components/', variables('appInsightsName'))]"
           ],
           "properties": {
@@ -116,7 +116,7 @@
           "location": "[resourceGroup().location]",
           "name": "[variables('onPremisesGatewayName')]",
           "dependsOn": [
-            "[concat('Microsoft.ApiManagement/service/', variables('apiManagementServiceName'))]"
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
           ],
           "properties": {
             "description": "Sample gateway for accessing on-premises apis without cloud transit",
@@ -133,8 +133,8 @@
     {
       "type": "Microsoft.ApiManagement/service/providers/diagnosticSettings",
       "apiVersion": "2016-09-01",
-      "name": "[concat(variables('apiManagementServiceName'), '/Microsoft.Insights/service')]",
-      "dependsOn": [ "[resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))]" ],
+      "name": "[concat(parameters('apiManagementServiceName'), '/Microsoft.Insights/service')]",
+      "dependsOn": [ "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))]" ],
       "properties": {
         "logs": [
           {
@@ -159,12 +159,12 @@
       "name": "[parameters('privateDnsZoneName')]",
       "location": "global",
       "dependsOn": [
-        "[resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))]"
+        "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))]"
       ],
       "resources": [
         {
           "type": "A",
-          "name": "[variables('apiManagementServiceName')]",
+          "name": "[parameters('apiManagementServiceName')]",
           "apiVersion": "2018-09-01",
           "dependsOn": [
             "[parameters('privateDnsZoneName')]"
@@ -173,14 +173,14 @@
             "ttl": 600,
             "aRecords": [
               {
-                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName') ) ).privateIPAddresses[0]]"
+                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName') ) ).privateIPAddresses[0]]"
               }
             ]
           }
         },
         {
           "type": "A",
-          "name": "[concat(variables('apiManagementServiceName'), '.portal')]",
+          "name": "[concat(parameters('apiManagementServiceName'), '.portal')]",
           "apiVersion": "2018-09-01",
           "dependsOn": [
             "[parameters('privateDnsZoneName')]"
@@ -189,14 +189,14 @@
             "ttl": 600,
             "aRecords": [
               {
-                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))).privateIPAddresses[0]]"
+                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))).privateIPAddresses[0]]"
               }
             ]
           }
         },
         {
           "type": "A",
-          "name": "[concat(variables('apiManagementServiceName'), '.developer')]",
+          "name": "[concat(parameters('apiManagementServiceName'), '.developer')]",
           "apiVersion": "2018-09-01",
           "dependsOn": [
             "[parameters('privateDnsZoneName')]"
@@ -205,14 +205,14 @@
             "ttl": 600,
             "aRecords": [
               {
-                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))).privateIPAddresses[0]]"
+                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))).privateIPAddresses[0]]"
               }
             ]
           }
         },
         {
           "type": "A",
-          "name": "[concat(variables('apiManagementServiceName'), '.management')]",
+          "name": "[concat(parameters('apiManagementServiceName'), '.management')]",
           "apiVersion": "2018-09-01",
           "dependsOn": [
             "[parameters('privateDnsZoneName')]"
@@ -221,14 +221,14 @@
             "ttl": 600,
             "aRecords": [
               {
-                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))).privateIPAddresses[0]]"
+                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))).privateIPAddresses[0]]"
               }
             ]
           }
         },
         {
           "type": "A",
-          "name": "[concat(variables('apiManagementServiceName'), '.scm')]",
+          "name": "[concat(parameters('apiManagementServiceName'), '.scm')]",
           "apiVersion": "2018-09-01",
           "dependsOn": [
             "[parameters('privateDnsZoneName')]"
@@ -237,7 +237,7 @@
             "ttl": 600,
             "aRecords": [
               {
-                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))).privateIPAddresses[0]]"
+                "ipv4Address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))).privateIPAddresses[0]]"
               }
             ]
           }
@@ -262,33 +262,33 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2018-09-01-preview",
-      "name": "[guid(concat(variables('apiManagementServiceName'), '-read-', parameters('keyVaultName')))]",
+      "name": "[guid(concat(parameters('apiManagementServiceName'), '-read-', parameters('keyVaultName')))]",
       "scope": "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
       "dependsOn": [
-        "[resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))]"
+        "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))]"
       ],
       "properties": {
         "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4633458b-17de-408a-b874-0445c86b69e6')]",
-        "principalId": "[reference(concat('Microsoft.ApiManagement/service/', variables('apiManagementServiceName')), '2020-12-01', 'Full').identity.principalId]"
+        "principalId": "[reference(concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName')), '2020-12-01', 'Full').identity.principalId]"
       }
     }
   ],
   "outputs": {
     "apimName": {
       "type": "string",
-      "value": "[variables('apiManagementServiceName')]"
+      "value": "[parameters('apiManagementServiceName')]"
     },
     "apimSubscriptionKey": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.ApiManagement/service/subscriptions', variables('apiManagementServiceName'), 'master'), '2019-01-01').primaryKey]"
+      "value": "[reference(resourceId('Microsoft.ApiManagement/service/subscriptions', parameters('apiManagementServiceName'), 'master'), '2019-01-01').primaryKey]"
     },
     "apimFqdn": {
       "type": "string",
-      "value": "[concat(variables('apiManagementServiceName'), '.azure-api.net')]"
+      "value": "[concat(parameters('apiManagementServiceName'), '.azure-api.net')]"
     },
     "apimPrivateIp": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apiManagementServiceName'))).privateIPAddresses[0]]"
+      "value": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))).privateIPAddresses[0]]"
     }
   }
 }

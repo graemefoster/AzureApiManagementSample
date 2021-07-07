@@ -45,7 +45,8 @@
     "functionAppName": "[concat('sample-functions-', uniqueString(resourceGroup().id))]",
     "sampleAppName": "[concat('sample-consumer-app-', uniqueString(resourceGroup().id))]",
     "soapApiPasswordSecretName": "soapApiPassword",
-    "functionCodeSecretName": "restToSoapfunctionCode"
+    "functionCodeSecretName": "restToSoapfunctionCode",
+    "apiManagementServiceName" : "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), '-apim')]"
   },
   "resources": [
     {
@@ -92,7 +93,8 @@
           "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
           "keyvaultName": { "value": "[variables('keyvaultName')]" },
           "publisherEmail": { "value": "[parameters('publisherEmail')]" },
-          "sku": { "value": "[parameters('apimSku')]" }
+          "sku": { "value": "[parameters('apimSku')]" },
+          "apiManagementServiceName" : {"value" : "[variables('apiManagementServiceName')]"}
         }
       }
     },
@@ -189,7 +191,7 @@
           "devopsServerPAT": { "value": "[parameters('devopsServerPAT')]" },
           "storageAccountName": { "value": "[parameters('storageAccountName')]" },
           "storageSasToken": { "value": "[parameters('templateSasKey')]" },
-          "apiManagementName": { "value": "[reference('apimTemplate').outputs['apimName'].value]" }
+          "apiManagementName": { "value": "[variables('apiManagementServiceName')]" }
         }
       }
     },
