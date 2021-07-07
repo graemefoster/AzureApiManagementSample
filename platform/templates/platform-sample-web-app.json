@@ -17,7 +17,7 @@
   },
   "variables": {
     "appInsightsName": "[concat(parameters('resourcePrefix'), parameters('appName'), uniqueString(resourceGroup().id), '-appi')]",
-    "privateEndpointName": "[concat(parameters('appName'), 'plink')]"
+    "privateEndpointName": "[concat(parameters('appName'), '-plink')]"
   },
   "resources": [
     {

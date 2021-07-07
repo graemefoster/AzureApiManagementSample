@@ -13,7 +13,7 @@
     },
     "variables": {
         "logicAppName": "[concat('apipoclogicapp', uniqueString(resourceGroup().id))]",
-        "privateEndpointName": "[concat(variables('logicAppName'), 'plink')]"
+        "privateEndpointName": "[concat(variables('logicAppName'), '-plink')]"
     },
     "resources": [
         {
