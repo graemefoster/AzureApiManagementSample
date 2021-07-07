@@ -1,0 +1,6 @@
+# action.yml
+name: 'Build Java Soap API'
+description: 'Build Java Soap API used in API Management Poc'
+runs:
+  using: 'docker'
+  image: './sample-java-soap-api/Dockerfile'
