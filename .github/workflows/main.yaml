@@ -30,8 +30,7 @@ jobs:
         with:
           push: true
           tags: ghcr.io/graemefoster/api-management-sample-java-soap-api:latest
-          path: apis/sample-java-soap-api/
-          context: .
+          context: apis/sample-java-soap-api/
 
       -
         name: Image digest
