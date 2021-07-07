@@ -40,9 +40,9 @@
     "keyvaultName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'kv')]",
     "templateBaseUri": "[concat(parameters('storageBaseUri'), 'platform')]",
     "scriptBaseUri": "[concat(parameters('storageBaseUri'), 'script')]",
-    "identityServerAppName": "[concat('identityserver', uniqueString(resourceGroup().id))]",
-    "functionAppName": "[concat('rest-soap-', uniqueString(resourceGroup().id))]",
-    "sampleAppName": "[concat('sampleapp', uniqueString(resourceGroup().id))]",
+    "identityServerAppName": "[concat('sample-identityserver-', uniqueString(resourceGroup().id))]",
+    "functionAppName": "[concat('sample-functions-', uniqueString(resourceGroup().id))]",
+    "sampleAppName": "[concat('sample-consumer-app-', uniqueString(resourceGroup().id))]",
     "soapApiPasswordSecretName": "soapApiPassword",
     "functionCodeSecretName": "restToSoapfunctionCode"
   },

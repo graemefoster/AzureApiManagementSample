@@ -12,7 +12,7 @@
         "workspaceId": { "type": "string" }
     },
     "variables": {
-        "logicAppName": "[concat('apipoclogicapp', uniqueString(resourceGroup().id))]",
+        "logicAppName": "[concat('apipoc-logicapp-', uniqueString(resourceGroup().id))]",
         "privateEndpointName": "[concat(variables('logicAppName'), '-plink')]"
     },
     "resources": [
