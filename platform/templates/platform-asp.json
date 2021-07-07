@@ -16,9 +16,9 @@
     "functionCodeSecretName": { "type": "string" }
   },
   "variables": {
-    "appServicePlanName": "[concat(parameters('resourcePrefix'),uniqueString(resourceGroup().id), '-asp')]",
-    "appInsightsName": "[concat(parameters('resourcePrefix'), '-functions-', uniqueString(resourceGroup().id), '-appi')]",
+    "appServicePlanName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), '-asp')]",
     "privateDnsZoneName": "privatelink.azurewebsites.net",
+    "appInsightsName": "[concat(parameters('apiName'), '-appi')]",
     "privateEndpointName": "[concat(parameters('apiName'), '-plink')]",
     "soapApiPassword": "this-is-a-sample-password",
     "functionCodeSecretName":  "[concat(parameters('keyvaultName'), '/', parameters('functionCodeSecretName'))]"
@@ -169,7 +169,7 @@
       ]
     },
     {
-      "name": "appsettings",
+      "name": "[concat(parameters('apiName'), '/', 'appsettings')]",
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2020-12-01",
       "properties": {
@@ -184,7 +184,7 @@
         "ApiPoc:Employee:Endpoint": "[parameters('soapEndpoint')]"
       },
       "dependsOn": [
-        "[variables('functionCodeSecretName')]"
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyvaultName'), parameters('functionCodeSecretName'))]"
       ]
     },
     {

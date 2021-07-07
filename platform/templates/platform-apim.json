@@ -56,7 +56,7 @@
     "keyvaultName": { "type": "string" }
   },
   "variables": {
-    "apiManagementServiceName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'apim')]",
+    "apiManagementServiceName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), '-apim')]",
     "appInsightsName": "[concat(parameters('resourcePrefix'), '-apim-', uniqueString(resourceGroup().id), '-appi')]",
     "onPremisesGatewayName": "[concat(variables('apiManagementServiceName'), '-onprem-apim-gway')]"
   },

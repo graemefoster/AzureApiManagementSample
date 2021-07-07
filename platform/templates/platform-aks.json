@@ -12,7 +12,7 @@
     },
     "variables": {
         "acrName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), 'acr')]",
-        "appInsightsName": "[concat(parameters('resourcePrefix'), 'aks', uniqueString(resourceGroup().id), '-appi')]",
+        "appInsightsName": "[concat(parameters('resourcePrefix'), '-aks-', uniqueString(resourceGroup().id), '-appi')]",
         "privateDnsZoneName": "poc.internal"
     },
     "resources": [

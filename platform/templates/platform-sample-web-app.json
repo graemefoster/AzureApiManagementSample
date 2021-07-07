@@ -16,7 +16,7 @@
     "appName": { "type": "string" }
   },
   "variables": {
-    "appInsightsName": "[concat(parameters('resourcePrefix'), '-', parameters('appName'), '-', uniqueString(resourceGroup().id), '-appi')]",
+    "appInsightsName": "[concat(parameters('appName'), '-appi')]",
     "privateEndpointName": "[concat(parameters('appName'), '-plink')]"
   },
   "resources": [
