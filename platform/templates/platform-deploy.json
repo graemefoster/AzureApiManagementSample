@@ -34,7 +34,7 @@
     "apimSubnetName": "[concat(parameters('resourcePrefix'), '-apim-subnet')]",
     "aksSubnetName": "[concat(parameters('resourcePrefix'), '-aks-subnet')]",
     "jumpboxSubnetName": "[concat(parameters('resourcePrefix'), '-jumpbox-subnet')]",
-    "devopSubnetName": "[concat(parameters('resourcePrefix'), '-devops-subnet')]",
+    "devopSubnetName": "[concat(parameters('resourcePrefix'), '-cicd-subnet')]",
     "paasSubnetName": "[concat(parameters('resourcePrefix'), '-paas-subnet')]",
     "privateLinkSubnetName": "[concat(parameters('resourcePrefix'), '-privatelink-subnet')]",
     "wafSubnetName": "[concat(parameters('resourcePrefix'), '-waf-subnet')]",
