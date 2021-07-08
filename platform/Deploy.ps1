@@ -15,9 +15,7 @@ param(
      $ApimSku = 'Developer',
     [Parameter(Mandatory, ParameterSetName='Gateway')]$WafPfxPath,
     [Parameter(Mandatory, ParameterSetName='Gateway')][SecureString]$WafPfxPassword,
-    [Parameter(Mandatory, ParameterSetName='Gateway')]$WafHostname,
-    $DevOpsServerUrl,
-    $DevOpsServerPAT
+    [Parameter(Mandatory, ParameterSetName='Gateway')]$WafHostname
 )
 
 function Deploy
@@ -52,8 +50,6 @@ function Deploy
             publisherEmail = "$ApimPubisherEmail"
             storageAccountName = "$($ResourcePrefix)stg"
             resourcePrefix = $ResourcePrefix
-            devopsServerUrl = [string]::IsNullOrWhiteSpace($DevOpsServerUrl) ? "" : $DevOpsServerUrl
-            devopsServerPAT = [string]::IsNullOrWhiteSpace($DevOpsServerPAT) ? "" : $DevOpsServerPAT
             deployWaf = $DeployWaf
             wafPfxContents = $WafPfxContents
             wafPfxPassword = $WafPfxPassword

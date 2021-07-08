@@ -9,26 +9,13 @@ echo "Resource Group: $3"
 echo "Storage Account Name: $4"
 echo "Storage SAS Token: $5"
 echo "APIm Name : $6"
-echo "DevOps Server: $7"
-echo "DevOps PAT: $8"
-echo "DevOps Agent Name: $9"
 
 aksClusterName=$2
 resourceGroupName=$3
 storageAccountName=$4
 storageSasToken=$5
 apimName=$6
-devopsServer=$7
-devopsPAT=$8
-devopsAgentName=$9
 wellKnownGatewayName="$apimName-onprem-apim-gway"
-
-if [ -z "$devopsPAT" ]
-then
-    echo "No devops configuration. Will not configure a devops agent"
-    devopsServer=""
-    devopsPAT=""
-fi
 
 mkdir -p $home/downloads
 echo "Installing az cli"
@@ -198,29 +185,6 @@ spec:
 
 kubectl apply -f $home/self-hosted-gateway.yaml
 echo "Deploy self hosted gateway manifest"
-
-if [ -z "$devopsPAT" ]
-then
-    echo "Skipping devops agent configuration $devopsServer"
-else
-    echo "DevOps server information passed in. Downloading devops agent and setting up on  $devopsServer"
-    curl -L https://vstsagentpackage.azureedge.net/agent/2.186.1/vsts-agent-linux-x64-2.186.1.tar.gz -o $home/downloads/vsts-agent-linux-x64.tar.gz
-    mkdir -p $home/myagent && cd $home/myagent
-
-    tar zxvf ../downloads/vsts-agent-linux-x64.tar.gz
-
-    echo "Configuring devops agent."
-    export AGENT_ALLOW_RUNASROOT="1" #http://www.azuredevopsguide.com/must-not-run-with-sudo-issue-on-azuredevops-agent-in-linux-machines/
-    $home/myagent/config.sh  --unattended --url $devopsServer --auth pat --token $devopsPAT --pool Default --agent $devopsAgentName --replace --work $home/myagent/_work --acceptTeeEula 
-
-    echo "Configured devops agent. Installing service"
-    $home/myagent/svc.sh install $user
-
-    echo "Starting devops agent"
-    $home/myagent/svc.sh start
-    echo "Installed and started devops agent service"
-
-fi
 
 # Set ownership on all of the files we've created
 cd $home
