@@ -34,6 +34,7 @@
     "apimSubnetName": "[concat(parameters('resourcePrefix'), '-apim-subnet')]",
     "aksSubnetName": "[concat(parameters('resourcePrefix'), '-aks-subnet')]",
     "jumpboxSubnetName": "[concat(parameters('resourcePrefix'), '-jumpbox-subnet')]",
+    "devopSubnetName": "[concat(parameters('resourcePrefix'), '-devops-subnet')]",
     "paasSubnetName": "[concat(parameters('resourcePrefix'), '-paas-subnet')]",
     "privateLinkSubnetName": "[concat(parameters('resourcePrefix'), '-privatelink-subnet')]",
     "wafSubnetName": "[concat(parameters('resourcePrefix'), '-waf-subnet')]",
@@ -46,7 +47,7 @@
     "sampleAppName": "[concat('sample-consumer-app-', uniqueString(resourceGroup().id))]",
     "soapApiPasswordSecretName": "soapApiPassword",
     "functionCodeSecretName": "restToSoapfunctionCode",
-    "apiManagementServiceName" : "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), '-apim')]"
+    "apiManagementServiceName": "[concat(parameters('resourcePrefix'), uniqueString(resourceGroup().id), '-apim')]"
   },
   "resources": [
     {
@@ -68,7 +69,8 @@
           "paasSubnetName": { "value": "[variables('paasSubnetName')]" },
           "privateLinkSubnetName": { "value": "[variables('privateLinkSubnetName')]" },
           "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
-          "wafSubnetName": { "value": "[variables('wafSubnetName')]" }
+          "wafSubnetName": { "value": "[variables('wafSubnetName')]" },
+          "devopSubnetName": { "value": "[variables('devopSubnetName')]" }
         }
       }
     },
@@ -94,7 +96,7 @@
           "keyvaultName": { "value": "[variables('keyvaultName')]" },
           "publisherEmail": { "value": "[parameters('publisherEmail')]" },
           "sku": { "value": "[parameters('apimSku')]" },
-          "apiManagementServiceName" : {"value" : "[variables('apiManagementServiceName')]"}
+          "apiManagementServiceName": { "value": "[variables('apiManagementServiceName')]" }
         }
       }
     },
@@ -181,7 +183,7 @@
         },
         "parameters": {
           "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
-          "subnetName": { "value": "[variables('jumpboxSubnetName')]" },
+          "subnetName": { "value": "[variables('devopSubnetName')]" },
           "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
           "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
           "publicKey": { "value": "[parameters('devopsAgentPublicKey')]" },
