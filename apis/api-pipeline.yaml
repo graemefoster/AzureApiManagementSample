@@ -18,7 +18,7 @@ stages:
 - stage: 'BuildAndPushDockerContainer'
   displayName: 'Build and push container to ACR'
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-latest
   jobs:
   - job: 'BuildAndPushDotNetCoreApiToAcr'
     steps:
