@@ -91,7 +91,7 @@
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2020-10-01-preview",
+            "apiVersion": "2021-04-01-preview",
             "name": "[guid(concat(parameters('aksClusterName'), '-managevnet-', parameters('vnetName')))]",
             "dependsOn": [ "[parameters('aksClusterName')]" ],
             "scope": "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
@@ -103,7 +103,7 @@
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2020-10-01-preview",
+            "apiVersion": "2021-04-01-preview",
             "name": "[guid(concat(parameters('aksClusterName'), '-accessacr-', variables('acrName')))]",
             "dependsOn": [ "[variables('acrName')]" ],
             "scope": "[concat('Microsoft.ContainerRegistry/registries/', variables('acrName'))]",
@@ -115,7 +115,7 @@
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2020-10-01-preview",
+            "apiVersion": "2021-04-01-preview",
             "name": "[guid(concat(parameters('managedIdentityName'), '-manageaks-', parameters('aksClusterName')))]",
             "dependsOn": [ "[parameters('aksClusterName')]" ],
             "scope": "[concat('Microsoft.ContainerService/managedClusters/', parameters('aksClusterName'))]",

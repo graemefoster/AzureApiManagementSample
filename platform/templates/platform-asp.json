@@ -218,7 +218,7 @@
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-10-01-preview",
+      "apiVersion": "2021-04-01-preview",
       "name": "[guid(concat(parameters('apiName'), '-read-', parameters('keyVaultName')))]",
       "scope": "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
       "dependsOn": [
