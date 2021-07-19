@@ -285,13 +285,14 @@
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2017-09-01",
-            "name": "1117b98b-1d4f-4787-a291-c67834d212e7",
+            "apiVersion": "2020-10-01-preview",
+            "name": "[guid(concat(parameters('managedIdentityName'), '-rg-contributor-', resourceGroup().name))]",
             "dependsOn": [ "[parameters('managedIdentityName')]" ],
             "properties": {
                 "roleDefinitionId": "[variables('contributor')]",
                 "principalId": "[reference(parameters('managedIdentityName'), '2018-11-30').principalId]",
-                "scope": "[resourceGroup().id]"
+                "scope": "[resourceGroup().id]",
+                "principalType": "ServicePrincipal"
             }
         }
     ],

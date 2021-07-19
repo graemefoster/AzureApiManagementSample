@@ -91,35 +91,38 @@
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2018-09-01-preview",
-            "name": "4d97b98b-1d4f-4787-a291-c67834d212e7",
+            "apiVersion": "2020-10-01-preview",
+            "name": "[guid(concat(parameters('aksClusterName'), '-managevnet-', parameters('vnetName')))]",
             "dependsOn": [ "[parameters('aksClusterName')]" ],
             "scope": "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
             "properties": {
                 "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
-                "principalId": "[reference(parameters('aksClusterName'), '2020-07-01', 'Full').identity.principalId]"
+                "principalId": "[reference(parameters('aksClusterName'), '2020-07-01', 'Full').identity.principalId]",
+                "principalType": "ServicePrincipal"
             }
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2018-09-01-preview",
-            "name": "5d97b98b-1d4f-4787-a291-c67834d212e8",
+            "apiVersion": "2020-10-01-preview",
+            "name": "[guid(concat(parameters('aksClusterName'), '-accessacr-', variables('acrName')))]",
             "dependsOn": [ "[variables('acrName')]" ],
             "scope": "[concat('Microsoft.ContainerRegistry/registries/', variables('acrName'))]",
             "properties": {
                 "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
-                "principalId": "[reference(parameters('aksClusterName'), '2020-07-01', 'Full').properties.identityProfile.kubeletidentity.objectId]"
+                "principalId": "[reference(parameters('aksClusterName'), '2020-07-01', 'Full').properties.identityProfile.kubeletidentity.objectId]",
+                "principalType": "ServicePrincipal"
             }
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2018-09-01-preview",
-            "name": "1d97b98b-1d4f-4787-a291-c67834d212e1",
+            "apiVersion": "2020-10-01-preview",
+            "name": "[guid(concat(parameters('managedIdentityName'), '-manageaks-', parameters('aksClusterName')))]",
             "dependsOn": [ "[parameters('aksClusterName')]" ],
             "scope": "[concat('Microsoft.ContainerService/managedClusters/', parameters('aksClusterName'))]",
             "properties": {
                 "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')]",
-                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')), '2018-11-30').principalId]"
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')), '2018-11-30').principalId]",
+                "principalType": "ServicePrincipal"
             }
         },
         {

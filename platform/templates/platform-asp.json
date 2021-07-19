@@ -218,7 +218,7 @@
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2018-09-01-preview",
+      "apiVersion": "2020-10-01-preview",
       "name": "[guid(concat(parameters('apiName'), '-read-', parameters('keyVaultName')))]",
       "scope": "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
       "dependsOn": [
@@ -226,7 +226,8 @@
       ],
       "properties": {
         "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4633458b-17de-408a-b874-0445c86b69e6')]",
-        "principalId": "[reference(concat('Microsoft.Web/sites/', parameters('apiName')), '2016-08-01', 'Full').identity.principalId]"
+        "principalId": "[reference(concat('Microsoft.Web/sites/', parameters('apiName')), '2016-08-01', 'Full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       }
     }
   ],
