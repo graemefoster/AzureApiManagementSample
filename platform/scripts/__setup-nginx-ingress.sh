@@ -7,17 +7,17 @@ echo "Fetching TLS certificate for NGINX from storage account $storageAccountNam
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformsecrets" -f $home/aks-ingress-tls.key --name "aks-ingress-tls.key"
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformsecrets" -f $home/aks-ingress-tls.crt --name "aks-ingress-tls.crt"
 
-ls -la $home/
-
 echo "Setting up nginx ingress in AKS"
 
 # See https://docs.microsoft.com/en-us/azure/aks/ingress-internal-ip for more details
 
-echo "controller:
+cat <<EOF > $home/internal-ingress.yaml
+controller:
   service:
     loadBalancerIP: 10.0.1.200
     annotations:
-      service.beta.kubernetes.io/azure-load-balancer-internal: ""true""" > $home/internal-ingress.yaml
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+EOF
 
 # Create a namespace for your ingress resources
 kubectl create namespace ingress-basic

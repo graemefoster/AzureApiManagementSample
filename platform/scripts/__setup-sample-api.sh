@@ -1,16 +1,18 @@
 #!/bin/bash
 home=$1
 acrName=$2
+appInsightsKey=$3
 
 echo "--------------------------------------------------------"
 echo "Deploying SOAP API to Kubernetes"
 
 echo "Importing container to private repo"
 az acr login -n $acrName
-az acr import -n $acrName --source ghcr.io/graemefoster/api-management-sample-java-soap-api:latest
+az acr import -n $acrName --source ghcr.io/graemefoster/api-management-sample-java-soap-api:latest --image api-management-sample-java-soap-api:latest
 echo "Imported container to private repo. Proceeding to deploy to AKS"
 
-echo "apiVersion: apps/v1
+cat <<EOF > $home/sample-java-api.yaml
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sample-java-soap-api-deployment
@@ -32,6 +34,9 @@ spec:
         ports:
           - containerPort: 8080
             protocol: TCP
+        env:
+          - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+            value: "$appInsightsKey"
 ---
 apiVersion: v1
 kind: Service
@@ -69,7 +74,8 @@ spec:
             service:
               name: sample-java-soap-api-service
               port:
-                number: 5678" > $home/sample-java-api.yaml
+                number: 5678"
+EOF
 
 kubectl apply -f $home/sample-java-api.yaml
 

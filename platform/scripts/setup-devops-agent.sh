@@ -10,9 +10,10 @@ echo "Storage Account Name: $4"
 echo "Storage SAS Token: $5"
 echo "APIm Name : $6"
 echo "ACR Name : $7"
-echo "DevOps Server: $8"
-echo "DevOps PAT: $9"
-echo "DevOps Agent Name: ${10}"
+echo "AKS App Insights Key : $8"
+echo "DevOps Server: $9"
+echo "DevOps PAT: $10"
+echo "DevOps Agent Name: ${11}"
 
 aksClusterName=$2
 resourceGroupName=$3
@@ -20,10 +21,10 @@ storageAccountName=$4
 storageSasToken=$5
 apimName=$6
 acrName=$7
-devopsServer=$8
-devopsPAT=$9
-devopsAgentName=${10}
-
+appInsightsKey=$8
+devopsServer=$9
+devopsPAT=$10
+devopsAgentName=${11}
 
 mkdir -p $home/agent-scripts
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__install-dependencies.sh" --name "script/__install-dependencies.sh"
@@ -52,7 +53,7 @@ echo "--------------------------------------------------------"
 
 echo "DEPLOYING SAMPLE API TO AKS"
 echo "--------------------------------------------------------"
-$home/agent-scripts/__setup-sample-api.sh "$home" "$acrName"
+$home/agent-scripts/__setup-sample-api.sh "$home" "$acrName" "$appInsightsKey"
 echo "DONE"
 echo "--------------------------------------------------------"
 

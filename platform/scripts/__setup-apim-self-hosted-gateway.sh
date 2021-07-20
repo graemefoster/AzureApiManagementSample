@@ -16,7 +16,8 @@ echo "Deploying APIm Self Hosted Gateway to AKS"
 kubectl create secret generic "$wellKnownGatewayName-token" --from-literal=value="GatewayKey $apimGatewayRegistrationToken"  --type=Opaque
 echo "Created secret for gateway. Processing to deploy manifest"
 
-echo "# NOTE: Before deploying to a production environment, please review the documentation -> https://aka.ms/self-hosted-gateway-production
+cat <<EOF > $home/self-hosted-gateway.yaml
+# NOTE: Before deploying to a production environment, please review the documentation -> https://aka.ms/self-hosted-gateway-production
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -93,7 +94,7 @@ metadata:
   name: apimgateway
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/backend-protocol: \"HTTPS\"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   rules:
   - host: apigateway.api.poc.internal
@@ -105,7 +106,8 @@ spec:
               service:
                   name: $wellKnownGatewayName
                   port: 
-                      number: 443" > $home/self-hosted-gateway.yaml
+                      number: 443
+EOF
 
 kubectl apply -f $home/self-hosted-gateway.yaml
 echo "Deploy self hosted gateway manifest"
