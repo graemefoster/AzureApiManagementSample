@@ -73,7 +73,7 @@ spec:
             service:
               name: sample-java-soap-api-service
               port:
-                number: 5678"
+                number: 5678
 EOF
 
 kubectl apply -f $home/sample-java-api.yaml
