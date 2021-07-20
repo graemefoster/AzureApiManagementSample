@@ -359,7 +359,7 @@
       "type": "string",
       "value": "[reference('appServicePlanTemplate').outputs['soapApiName'].value]"
     },
-    "AcrUri": {
+    "AcrName": {
       "type": "string",
       "value": "[reference('aksTemplate').outputs['acrName'].value]"
     },

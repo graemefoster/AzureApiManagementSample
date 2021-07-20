@@ -19,9 +19,10 @@ resourceGroupName=$3
 storageAccountName=$4
 storageSasToken=$5
 apimName=$6
-devopsServer=$7
-devopsPAT=$8
-devopsAgentName=$9
+acrName=$7
+devopsServer=$8
+devopsPAT=$9
+devopsAgentName=$10
 wellKnownGatewayName="$apimName-onprem-apim-gway"
 
 if [ -z "$devopsPAT" ]
@@ -203,8 +204,73 @@ echo "Deploy self hosted gateway manifest"
 echo "--------------------------------------------------------"
 echo "Deploying SOAP API to Kubernetes"
 
-echo "Pushing container to private repo"
-az acr login -n 
+echo "Importing container to private repo"
+az acr login -n $acrName
+az acr import -n $acrName --source ghcr.io/graemefoster/api-management-sample-java-soap-api:latest
+echo "Imported container to private repo. Proceeding to deploy to AKS"
+
+echo "apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-java-soap-api-deployment
+  labels:
+    app: sample-java-soap-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-java-soap-api
+  template:
+    metadata:
+      labels:
+        app: sample-java-soap-api
+    spec:
+      containers:
+      - name: sample-java-soap-api
+        image: "$acrName.azurecr.io/api-management-sample-java-soap-api:latest"
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-java-soap-api-service
+spec:
+  selector:
+    app: sample-java-soap-api
+  ports:
+    - protocol: TCP
+      port: 5678
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-java-soap-api-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  tls:
+  - hosts:
+    - api.poc.internal
+    secretName: aks-ingress-tls
+  rules:
+  - host: api.poc.internal
+    http:
+      paths:
+        - path: /country(/|$)(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: sample-java-soap-api-service
+              port:
+                number: 5678" > $home/sample-java-api.yaml
+
+kubectl apply -f $home/sample-java-api.yaml
 
 echo "Deployed SOAP API to Kubernetes"
 echo "--------------------------------------------------------"
