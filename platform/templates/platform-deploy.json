@@ -170,38 +170,6 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "name": "devopsAgentTemplate",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'aksTemplate')]",
-        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-devops-agent.json', parameters('templateSasKey'))]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
-          "subnetName": { "value": "[variables('devopSubnetName')]" },
-          "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
-          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
-          "publicKey": { "value": "[parameters('devopsAgentPublicKey')]" },
-          "setupScriptUrl": { "value": "[concat(variables('scriptBaseUri'), '/', 'setup-devops-agent.sh', parameters('templateSasKey'))]" },
-          "aksClusterName": { "value": "[variables('aksClusterName')]" },
-          "devopsServerUrl": { "value": "[parameters('devopsServerUrl')]" },
-          "devopsServerPAT": { "value": "[parameters('devopsServerPAT')]" },
-          "storageAccountName": { "value": "[parameters('storageAccountName')]" },
-          "storageSasToken": { "value": "[parameters('templateSasKey')]" },
-          "apiManagementName": { "value": "[variables('apiManagementServiceName')]" },
-          "acrName": { "value": "[reference('aksTemplate').outputs['acrName'].value]" },
-          "aksAppInsightsConnectionString": { "value": "[reference('aksTemplate').outputs['applicationInsightsConnectionString'].value]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
       "name": "appServicePlanTemplate",
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'networksTemplate')]",
@@ -334,6 +302,59 @@
           "functionApp": { "value": "[variables('functionAppName')]" },
           "keyvault": { "value": "[variables('keyvaultName')]" },
           "identityServerAppName": { "value": "[variables('identityServerAppName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "apiTwoTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageBaseUri'), 'apis/api-arm/onpremises-api.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageBaseUri": { "value": "[parameters('storageBaseUri')]" },
+          "templateSasKey": { "value": "[parameters('templateSasKey')]" },
+          "apiManagementServiceName": { "value": "[variables('apiManagementServiceName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "devopsAgentTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'aksTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'apiOneTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUri'), '/', 'platform-devops-agent.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetId": { "value": "[reference('networksTemplate').outputs['vnetId'].value]" },
+          "subnetName": { "value": "[variables('devopSubnetName')]" },
+          "managedIdentityName": { "value": "[variables('managedIdentityName')]" },
+          "resourcePrefix": { "value": "[parameters('resourcePrefix')]" },
+          "publicKey": { "value": "[parameters('devopsAgentPublicKey')]" },
+          "setupScriptUrl": { "value": "[concat(variables('scriptBaseUri'), '/', 'setup-devops-agent.sh', parameters('templateSasKey'))]" },
+          "aksClusterName": { "value": "[variables('aksClusterName')]" },
+          "devopsServerUrl": { "value": "[parameters('devopsServerUrl')]" },
+          "devopsServerPAT": { "value": "[parameters('devopsServerPAT')]" },
+          "storageAccountName": { "value": "[parameters('storageAccountName')]" },
+          "storageSasToken": { "value": "[parameters('templateSasKey')]" },
+          "apiManagementName": { "value": "[variables('apiManagementServiceName')]" },
+          "acrName": { "value": "[reference('aksTemplate').outputs['acrName'].value]" },
+          "aksAppInsightsConnectionString": { "value": "[reference('aksTemplate').outputs['applicationInsightsConnectionString'].value]" }
         }
       }
     },

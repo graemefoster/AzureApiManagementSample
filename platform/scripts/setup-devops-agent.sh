@@ -32,6 +32,7 @@ az storage blob download --sas-token "$storageSasToken" --account-name "$storage
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-apim-self-hosted-gateway.sh" --name "script/__setup-apim-self-hosted-gateway.sh" --output none
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-sample-api.sh" --name "script/__setup-sample-api.sh" --output none
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-devops-agent.sh" --name "script/__setup-devops-agent.sh" --output none
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/api-definitions/employee-api.json" --name "apis/open-api-definitions/employee-api.json" --output none
 chmod -R 744  $home/agent-scripts/
 
 
@@ -55,7 +56,7 @@ echo "--------------------------------------------------------"
 
 echo "DEPLOYING SAMPLE API TO AKS"
 echo "--------------------------------------------------------"
-$home/agent-scripts/__setup-sample-api.sh "$home" "$acrName" "$appInsightsKey"
+$home/agent-scripts/__setup-sample-api.sh "$home" "$acrName" "$appInsightsKey" "$resourceGroupName" "$apimName"
 echo "--------------------------------------------------------"
 
 

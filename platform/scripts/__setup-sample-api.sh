@@ -2,6 +2,8 @@
 home=$1
 acrName=$2
 appInsightsKey=$3
+resourceGroupName=$4
+apimName=$5
 
 echo "Importing container to private repo"
 az acr login -n $acrName
@@ -77,4 +79,9 @@ EOF
 kubectl apply -f $home/sample-java-api.yaml
 
 echo "Deployed SOAP API to Kubernetes"
+echo "--------------------------------------------------------"
+
+echo "--------------------------------------------------------"
+echo "Importing API definition to API Management"
+az apim api import --path employee --resource-group $resourceGroupName --service-name $apimName --api-id employeeApi --api-type http --specification-format OpenApi --specification-path "$home/api-definitions/employee-api.json"
 echo "--------------------------------------------------------"
