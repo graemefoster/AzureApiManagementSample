@@ -19,7 +19,7 @@ It optionally deploys
 
 It is not production quality. But it can be used to play and poke at a depoyment and to understand how to deploy all of this with Azure ARM templates.
 
-There are Azure DevOps pipelines in the repo to support automated deployment.
+There are sample Azure DevOps pipelines in the repo. The sample doesn't need these to function, but if you want to clone the repo, and make changes to the APIs, then they could be used as a starting point to wrap CI/CD pipelines around the sample.
 
 ## Platform Deployment from local machine
 
@@ -54,7 +54,11 @@ echo az provider show -n Microsoft.ContainerService -otable
 
 > If you are updating an existing cluster you will need to register the UpdateAzureRBACPreview feature
 
-### Setup DevOps Library Group
+## Azure DevOps
+
+The sample deploys and runs without any requirements on CI/CD pipelines. If you choose to deploy a DevOps agent then you'll need to do some configuration inside Azure DevOps to get the pipelines to run.
+
+### Setup 'Platform-POC' Library Group
 
 Create a new library group called 'Platform-POC' with the following variables:
 
@@ -76,7 +80,7 @@ Create the following Service Connections for ARM deployment that can access the 
 | --- | --- | --- |
 | PoCServiceConnection | Azure Resource Manager | Deploys the resources |
 
-### Deploy DeOps Pipeline
+### Import the DeOps Pipeline
 
 Create an azure pipeline using the ```./platform/platform-deploy-pipeline.yaml``` file, and run the pipeline.
 
@@ -125,7 +129,7 @@ Create azure pipelines using the following yaml files:
 ``` 
 Run the pipelines
 
-> We use Kubernetes RBAC Authorization and a managed identity on the VM to authenticate / authorize kubectl requests. This is currently wired up in a script extension om the devops agent.
+> We use Kubernetes RBAC Authorization and a managed identity on the Devops VM to authenticate / authorize kubectl requests. This is currently wired up in a script extension om the devops agent.
 
 ## Azure Architecture
 ![apim-poc.drawio.png](./apim-poc.drawio.png)
