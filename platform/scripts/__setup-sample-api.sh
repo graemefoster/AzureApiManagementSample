@@ -1,4 +1,5 @@
 #!/bin/bash
+aksClusterName=$1
 
 echo "THIS IS A SCRIPT FETCHED FROM STORAGE"
 echo "Cluster name:: $aksClusterName ::"

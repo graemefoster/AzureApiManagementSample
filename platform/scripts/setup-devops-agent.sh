@@ -278,13 +278,12 @@ echo "--------------------------------------------------------"
 echo "TESTING CONCEPT OF REFERENCED SCRIPTS"
 echo "--------------------------------------------------------"
 mkdir -p $home/agent-scripts
-az storage blob directory download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -s "" -d "$home/agent-scripts/"
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-sample-api.sh" --name "script/__setup-sample-api.sh"
 chmod -R 744  $home/agent-scripts/
 
 #https://stackoverflow.com/questions/8352851/how-to-call-one-shell-script-from-another-shell-script/8352939
 #Source should make the variables set at the top of this script accessible to the next script
-ls -la $home/agent-scripts/
-source $home/agent-scripts/__setup-sample-api.sh
+$home/agent-scripts/__setup-sample-api.sh "$aksClusterName"
 
 
 echo "DONE"
