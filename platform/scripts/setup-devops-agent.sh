@@ -56,7 +56,6 @@ echo "--------------------------------------------------------"
 echo "DEPLOYING SAMPLE API TO AKS"
 echo "--------------------------------------------------------"
 $home/agent-scripts/__setup-sample-api.sh "$home" "$acrName" "$appInsightsKey"
-echo "DONE"
 echo "--------------------------------------------------------"
 
 
@@ -67,8 +66,7 @@ else
 
   echo "DEPLOYING DEVOPS AGENT"
   echo "--------------------------------------------------------"
-  $home/agent-scripts/__setup-devops-agent.sh "$home" "$devopsServer" "$devopsPAT" "$user"
-  echo "DONE"
+  $home/agent-scripts/__setup-devops-agent.sh "$home" "$devopsServer" "$devopsPAT" "$user" "$devopsAgentName"
   echo "--------------------------------------------------------"
 
 fi

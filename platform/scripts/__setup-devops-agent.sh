@@ -3,6 +3,7 @@ home=$1
 devopsServer=$2
 devopsPAT=$3
 user=$4
+devopsAgentName=$5
 
 echo "DevOps server information passed in. Downloading devops agent and setting up on  $devopsServer"
 curl -L https://vstsagentpackage.azureedge.net/agent/2.186.1/vsts-agent-linux-x64-2.186.1.tar.gz -o $home/downloads/vsts-agent-linux-x64.tar.gz
