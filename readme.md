@@ -63,6 +63,39 @@ echo az provider show -n Microsoft.ContainerService -otable
 
 > If you are updating an existing cluster you will need to register the UpdateAzureRBACPreview feature
 
+## Running the sample
+
+The sample deploys into a Virtual Network and without the WAF is inaccessible publically. The simplest way to access it is by using a SSH tunnel to create a SOCKS proxy to the jumpbox.
+
+The SSH key is inside a storage account deployed into the resource group. The continer is ```platformsecrets```. The path is ```jumpboxSshKey```. Grab this and put it somewhere on your local disk.
+
+Next fetch the public IP address associated with the jumpbox. It's a resource inside the resource group, of type 'Public IP address', and there's only one.
+
+Now you're ready to setup the tunnel. Execute this command from a shell:
+
+```
+ssh -D 1337 -C -N -i <path>/jumpboxSshKey jumpboxadmin@<ip-address>
+```
+
+Now you can open Google Chrome up using this proxy. On Windows I had to kill all running Chrome instances. When you've done that, fire this command at your shell:
+
+```
+& 'C:\Program Files\Google\Chrome\Application\chrome.exe' --proxy-server="socks5://localhost:1337"
+```
+
+## Accessing the sample apps
+The entry app will have a name something like ```sample-consumer-app-<random>```. Go and find this inside the resource group you deployed to in the Azure Portal. 
+
+Navigate to ```https://sample-consumer-app-<random>.azurewebsites.net```. You will find yourself bounced to a sign-in page. This is a private instance of Identity Server.
+
+There are two users you can sign in as:
+| Username | Password |
+| --- | --- |
+| fred | p@ssw0rd |
+| graeme | p@ssw0rd |
+
+And that's it. You should be able to search on Ids from 12345678, and a thousand or so above that! The data is all deterministic.
+
 ## Azure DevOps
 
 The sample deploys and runs without any requirements on CI/CD pipelines. If you choose to deploy a DevOps agent then you'll need to do some configuration inside Azure DevOps to get the pipelines to run.
