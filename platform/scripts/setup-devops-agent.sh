@@ -9,9 +9,10 @@ echo "Resource Group: $3"
 echo "Storage Account Name: $4"
 echo "Storage SAS Token: $5"
 echo "APIm Name : $6"
-echo "DevOps Server: $7"
-echo "DevOps PAT: $8"
-echo "DevOps Agent Name: $9"
+echo "ACR Name : $7"
+echo "DevOps Server: $8"
+echo "DevOps PAT: $9"
+echo "DevOps Agent Name: $10
 
 aksClusterName=$2
 resourceGroupName=$3
@@ -198,6 +199,15 @@ spec:
 
 kubectl apply -f $home/self-hosted-gateway.yaml
 echo "Deploy self hosted gateway manifest"
+
+echo "--------------------------------------------------------"
+echo "Deploying SOAP API to Kubernetes"
+
+echo "Pushing container to private repo"
+az acr login -n 
+
+echo "Deployed SOAP API to Kubernetes"
+echo "--------------------------------------------------------"
 
 if [ -z "$devopsPAT" ]
 then

@@ -193,7 +193,8 @@
           "devopsServerPAT": { "value": "[parameters('devopsServerPAT')]" },
           "storageAccountName": { "value": "[parameters('storageAccountName')]" },
           "storageSasToken": { "value": "[parameters('templateSasKey')]" },
-          "apiManagementName": { "value": "[variables('apiManagementServiceName')]" }
+          "apiManagementName": { "value": "[variables('apiManagementServiceName')]" },
+          "acrName" : { "value" : "[reference('aksTemplate').outputs['acrName'].value]" }
         }
       }
     },
