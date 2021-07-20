@@ -194,8 +194,8 @@
           "storageAccountName": { "value": "[parameters('storageAccountName')]" },
           "storageSasToken": { "value": "[parameters('templateSasKey')]" },
           "apiManagementName": { "value": "[variables('apiManagementServiceName')]" },
-          "acrName" : { "value" : "[reference('aksTemplate').outputs['acrName'].value]" },
-          "aksAppInsightsConnectionString" : { "value" : "[reference('aksTemplate').outputs['applicationInsightsConnectionString'].value]" }
+          "acrName": { "value": "[reference('aksTemplate').outputs['acrName'].value]" },
+          "aksAppInsightsConnectionString": { "value": "[reference('aksTemplate').outputs['applicationInsightsConnectionString'].value]" }
         }
       }
     },
@@ -308,6 +308,32 @@
           "apiManagementName": { "value": "[reference('apimTemplate').outputs['apimName'].value]" },
           "apiManagementSubscriptionKey": { "value": "[reference('apimTemplate').outputs['apimSubscriptionKey'].value]" },
           "appName": { "value": "[variables('sampleAppName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "apiOneTemplate",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'apimTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'keyvaultTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'identityServerTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'appServicePlanTemplate')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageBaseUri'), 'apis/api-arm/employee-api.json', parameters('templateSasKey'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageBaseUri": { "value": "[parameters('storageBaseUri')]" },
+          "templateSasKey": { "value": "[parameters('templateSasKey')]" },
+          "apiManagementServiceName": { "value": "[variables('apiManagementServiceName')]" },
+          "functionApp": { "value": "[variables('functionAppName')]" },
+          "keyvault": { "value": "[variables('keyvaultName')]" },
+          "identityServerAppName": { "value": "[variables('identityServerAppName')]" }
         }
       }
     },

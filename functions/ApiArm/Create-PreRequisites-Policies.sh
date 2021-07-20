@@ -17,12 +17,12 @@ az login --identity
 #figure out way to check if storage account already exists
 az storage account create --name $storageAccountName --location "$LOCATION" --resource-group $RESOURCEGROUP --sku Standard_LRS --https-only true --kind StorageV2 --allow-blob-public-access false || echo "Storage account already exists"
 
-container="apipolicies"
+container="platformtemplates"
 
 az storage container create -n $container --account-name $storageAccountName
 
 files="./functions/ApiArm/policies/*.xml"
-destination_folder='policies/'
+destination_folder='apis/policies/'
 
 for f in $files
 do

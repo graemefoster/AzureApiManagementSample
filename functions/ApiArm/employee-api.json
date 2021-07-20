@@ -10,7 +10,7 @@
         "identityServerAppName": { "type": "string" }
     },
     "variables": {
-        "templateBaseUri": "[concat(parameters('storageBaseUri'), 'policies')]",
+        "templateBaseUri": "[concat(parameters('storageBaseUri'), 'apis/policies')]",
         "backendFunctionCodeName": "rest-to-soap-function-key",
         "backendName": "rest-to-soap-function-backend",
         "apiName": "employeeApi",

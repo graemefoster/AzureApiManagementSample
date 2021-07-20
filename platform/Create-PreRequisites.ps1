@@ -40,6 +40,24 @@ Get-ChildItem -Path . -File -Filter "*.sh" -Recurse | ForEach-Object {
     Set-AzStorageBlobContent -File $_.FullName -Container $container -Context $ctx -Blob $blobName -Force
 }
 
+Get-ChildItem -Path ..\functions\ApiArm\policies\ -File -Filter "*.xml" | ForEach-Object { 
+    $blobName = "apis/policies/$($_.Name)"
+    Write-Host "Copying $($_.FullName) to $blobName"
+    Set-AzStorageBlobContent -File $_.FullName -Container $container -Context $ctx -Blob $blobName -Force
+}
+
+Get-ChildItem -Path ..\functions\ApiArm\ -File -Filter "*.json" | ForEach-Object { 
+    $blobName = "apis/api-arm/$($_.Name)"
+    Write-Host "Copying $($_.FullName) to $blobName"
+    Set-AzStorageBlobContent -File $_.FullName -Container $container -Context $ctx -Blob $blobName -Force
+}
+
+Get-ChildItem -Path ..\functions\ApiArm\open-api-definitions\ -File -Filter "*.json" -Recurse | ForEach-Object { 
+    $blobName = "apis/open-api-definitions/$($_.Name)"
+    Write-Host "Copying $($_.FullName) to $blobName"
+    Set-AzStorageBlobContent -File $_.FullName -Container $container -Context $ctx -Blob $blobName -Force
+}
+
 Write-Host "Getting SAS token for deployment"
 $token = New-AzStorageAccountSASToken -Context $ctx -Service Blob -ResourceType Object -Permission r -ExpiryTime ([System.DateTime]::Now).AddMinutes(180)
 Write-Host "##vso[task.setvariable variable=SasToken;isSecret=true;isOutput=true;]$token"
