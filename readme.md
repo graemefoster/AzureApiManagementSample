@@ -69,6 +69,8 @@ The sample deploys into a Virtual Network and without the WAF is inaccessible pu
 
 The SSH key is inside a storage account deployed into the resource group. The continer is ```platformsecrets```. The path is ```jumpboxSshKey```. Grab this and put it somewhere on your local disk.
 
+> This is a terrible way to store secrets of course. For anything not demo-like you should use a proper secrets storage service, like Azure Key Vault.
+
 Next fetch the public IP address associated with the jumpbox. It's a resource inside the resource group, of type 'Public IP address', and there's only one.
 
 Now you're ready to setup the tunnel. Execute this command from a shell:

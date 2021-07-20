@@ -50,11 +50,11 @@
             },
             {
               "name": "WEBSITE_ENABLE_SYNC_UPDATE_SITE",
-              "value": true
+              "value": "true"
             },
             {
               "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-              "value": true
+              "value": "true"
             },
             {
               "name": "PROJECT",
@@ -81,10 +81,10 @@
             "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
           ],
           "properties": {
-            "RepoUrl": "[variables('repoURL')]",
+            "repoUrl": "[variables('repoURL')]",
             "branch": "main",
             "project": "[variables('repoProject')]",
-            "IsManualIntegration": true
+            "isManualIntegration": true
           }
         },
         {
@@ -92,7 +92,8 @@
           "apiVersion": "2019-08-01",
           "name": "virtualNetwork",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+            "[resourceId('Microsoft.Web/sites', parameters('appName'))]",
+            "[resourceId('Microsoft.Web/sites/sourcecontrols', parameters('appName'), 'web')]"
           ],
           "properties": {
             "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('paasSubnetName'))]",
