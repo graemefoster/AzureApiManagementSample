@@ -12,7 +12,7 @@ echo "APIm Name : $6"
 echo "ACR Name : $7"
 echo "AKS App Insights Key : $8"
 echo "DevOps Server: $9"
-echo "DevOps PAT: $10"
+echo "DevOps PAT: ${10}"
 echo "DevOps Agent Name: ${11}"
 
 aksClusterName=$2
@@ -23,13 +23,15 @@ apimName=$6
 acrName=$7
 appInsightsKey=$8
 devopsServer=$9
-devopsPAT=$10
+devopsPAT=${10}
 devopsAgentName=${11}
 
 mkdir -p $home/agent-scripts
-az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__install-dependencies.sh" --name "script/__install-dependencies.sh"
-az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-nginx-ingress.sh" --name "script/__setup-nginx-ingress.sh"
-az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-sample-api.sh" --name "script/__setup-sample-api.sh"
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__install-dependencies.sh" --name "script/__install-dependencies.sh" --output none
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-nginx-ingress.sh" --name "script/__setup-nginx-ingress.sh" --output none
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-apim-self-hosted-gateway.sh" --name "script/__setup-apim-self-hosted-gateway.sh" --output none
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-sample-api.sh" --name "script/__setup-sample-api.sh" --output none
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-devops-agent.sh" --name "script/__setup-devops-agent.sh" --output none
 chmod -R 744  $home/agent-scripts/
 
 
@@ -58,7 +60,7 @@ echo "DONE"
 echo "--------------------------------------------------------"
 
 
-if [ -z "$devopsPAT" ]
+if [ -z "$devopsServer" ]
 then
     echo "Skipping devops agent configuration $devopsServer"
 else

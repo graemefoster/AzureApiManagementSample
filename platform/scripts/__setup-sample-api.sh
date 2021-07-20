@@ -3,9 +3,6 @@ home=$1
 acrName=$2
 appInsightsKey=$3
 
-echo "--------------------------------------------------------"
-echo "Deploying SOAP API to Kubernetes"
-
 echo "Importing container to private repo"
 az acr login -n $acrName
 az acr import -n $acrName --source ghcr.io/graemefoster/api-management-sample-java-soap-api:latest --image api-management-sample-java-soap-api:latest
@@ -58,7 +55,7 @@ metadata:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/rewrite-target: /\$2
 spec:
   tls:
   - hosts:

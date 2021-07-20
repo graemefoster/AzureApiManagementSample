@@ -4,8 +4,8 @@ storageAccountName=$2
 storageSasToken=$3
 
 echo "Fetching TLS certificate for NGINX from storage account $storageAccountName"
-az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformsecrets" -f $home/aks-ingress-tls.key --name "aks-ingress-tls.key"
-az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformsecrets" -f $home/aks-ingress-tls.crt --name "aks-ingress-tls.crt"
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformsecrets" -f $home/aks-ingress-tls.key --name "aks-ingress-tls.key" --output none
+az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformsecrets" -f $home/aks-ingress-tls.crt --name "aks-ingress-tls.crt" --output none
 
 echo "Setting up nginx ingress in AKS"
 
