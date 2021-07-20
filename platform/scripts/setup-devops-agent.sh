@@ -12,7 +12,7 @@ echo "APIm Name : $6"
 echo "ACR Name : $7"
 echo "DevOps Server: $8"
 echo "DevOps PAT: $9"
-echo "DevOps Agent Name: ${10}
+echo "DevOps Agent Name: ${10}"
 
 aksClusterName=$2
 resourceGroupName=$3
