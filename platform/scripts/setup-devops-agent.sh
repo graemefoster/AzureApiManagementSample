@@ -275,6 +275,22 @@ kubectl apply -f $home/sample-java-api.yaml
 echo "Deployed SOAP API to Kubernetes"
 echo "--------------------------------------------------------"
 
+echo "TESTING CONCEPT OF REFERENCED SCRIPTS"
+echo "--------------------------------------------------------"
+mkdir -p $home/agent-scripts
+az storage blob directory download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -s "" -d "$home/agent-scripts/"
+chmod -R 744  $home/agent-scripts/
+
+#https://stackoverflow.com/questions/8352851/how-to-call-one-shell-script-from-another-shell-script/8352939
+#Source should make the variables set at the top of this script accessible to the next script
+ls -la $home/agent-scripts/
+source $home/agent-scripts/__setup-sample-api.sh
+
+
+echo "DONE"
+echo "--------------------------------------------------------"
+
+
 if [ -z "$devopsPAT" ]
 then
     echo "Skipping devops agent configuration $devopsServer"
