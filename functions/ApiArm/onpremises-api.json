@@ -7,7 +7,7 @@
         "apiManagementServiceName": { "type": "string" }
     },
     "variables": {
-        "templateBaseUri": "[concat(parameters('storageBaseUri'), 'policies')]",
+        "templateBaseUri": "[concat(parameters('storageBaseUri'), 'apis/policies')]",
         "backendName": "onpremises-backend",
         "apiName": "onpremises-employmentdetails-api",
         "apiVersionSetName": "onpremisesApiVersionSet-v1",
@@ -34,7 +34,7 @@
             "type": "Microsoft.ApiManagement/service/backends",
             "apiVersion": "2020-06-01-preview",
             "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service/properties', parameters('apiManagementServiceName'), variables('onPremisesBackendPassword'))]"
+                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('apiManagementServiceName'), variables('onPremisesBackendPassword'))]"
             ],
             "properties": {
                 "url": "http://sample-java-soap-api-service.default.svc.cluster.local:5678/ws/",

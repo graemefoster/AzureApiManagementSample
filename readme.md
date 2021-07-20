@@ -23,19 +23,28 @@ There are sample Azure DevOps pipelines in the repo. The sample doesn't need the
 
 ## Platform Deployment from local machine
 
+### Simple Deployment
+
+>>This is the simplest way to run the sanmple.
+
+``` \platform\Deploy.ps1 -ResourceGroupName {{resourceGroupName}} -ResourcePrefix {{resourcePrefix}} -Location "{{azure location}}" -ApimPublisherEmail {{azure apim publisher email}} ``` 
+
 ### Deployment with devops agent and WAF
+
+>> Requires a TLS certificate with a CN / SAN matching the hostname parameter
+
 ``` \platform\Deploy.ps1 -ResourceGroupName {{resourceGroupName}} -ResourcePrefix {{resourcePrefix}} -Location "{{azure location}}" -ApimPublisherEmail {{azure apim publisher email}} -DevOpsServerUrl {{devops server uri}} -DevOpsServerPAT {{devops personal access token for a build agent}} -WafPfxPath {{waf pfx file}} -WafHostname {{waf hostname}} ```
 
 ### Deployment with devops agent
+
+>> Requires a PAT token from Azure Devops
+
 ``` \platform\Deploy.ps1 -ResourceGroupName {{resourceGroupName}} -ResourcePrefix {{resourcePrefix}} -Location "{{azure location}}" -ApimPublisherEmail {{azure apim publisher email}} -DevOpsServerUrl {{devops server uri}} -DevOpsServerPAT {{devops personal access token for a build agent}}  ```
 
 ### Deployment with WAF
 ``` \platform\Deploy.ps1 -ResourceGroupName {{resourceGroupName}} -ResourcePrefix {{resourcePrefix}} -Location "{{azure location}}" -ApimPublisherEmail {{azure apim publisher email}} -WafPfxPath {{waf pfx file}} -WafHostname {{waf hostname}}  ```
 
-### Deployment with no Devops Agent and no WAF
-``` \platform\Deploy.ps1 -ResourceGroupName {{resourceGroupName}} -ResourcePrefix {{resourcePrefix}} -Location "{{azure location}}" -ApimPublisherEmail {{azure apim publisher email}} ``` 
-
-## Platform Deployment in Azure DevOps
+## Required Az features 
 
 We love trying new features and have used the AKS AAD Authorization feature that, as of the time of writing, is in preview. To register it:
 
