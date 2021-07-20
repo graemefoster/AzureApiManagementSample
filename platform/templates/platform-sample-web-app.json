@@ -17,7 +17,9 @@
   },
   "variables": {
     "appInsightsName": "[concat(parameters('appName'), '-appi')]",
-    "privateEndpointName": "[concat(parameters('appName'), '-plink')]"
+    "privateEndpointName": "[concat(parameters('appName'), '-plink')]",
+    "repoURL": "https://github.com/graemefoster/AzureApiManagementSample",
+    "repoProject": "functions\\TestOidcWebApp\\TestOidcWebApp.csproj"
   },
   "resources": [
     {
@@ -53,10 +55,6 @@
               "value": true
             },
             {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": 1
-            },
-            {
               "name": "AuthServer:Url",
               "value": "[concat('https://', parameters('identityServerAppName'), '.azurewebsites.net/')]"
             },
@@ -79,12 +77,34 @@
             {
               "name": "SampleApp:ApiManagementSubscriptionKey",
               "value": "[parameters('apiManagementSubscriptionKey')]"
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": true
+            },
+            {
+              "name": "PROJECT",
+              "value": "[variables('repoProject')]"
             }
           ]
         },
         "serverFarmId": "[parameters('serverFarmId')]"
       },
       "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[variables('repoURL')]",
+            "branch": "main",
+            "project": "[variables('repoProject')]",
+            "IsManualIntegration": true
+          }
+        },
         {
           "type": "networkConfig",
           "apiVersion": "2019-08-01",

@@ -22,7 +22,9 @@
     "privateEndpointName": "[concat(parameters('apiName'), '-plink')]",
     "soapApiPassword": "this-is-a-sample-password",
     "functionCodeSecretName": "[concat(parameters('keyvaultName'), '/', parameters('functionCodeSecretName'))]",
-    "function-key": "[guid(resourceGroup().id)]"
+    "function-key": "[guid(resourceGroup().id)]",
+    "repoURL": "https://github.com/graemefoster/AzureApiManagementSample",
+    "repoProject": "functions\\ApiPoc\\ApiPoc.csproj"
   },
   "resources": [
     {
@@ -84,8 +86,12 @@
               "value": true
             },
             {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": 1
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": true
+            },
+            {
+              "name": "PROJECT",
+              "value": "[variables('repoProject')]"
             },
             {
               "name": "ApiPoc:Employee:SystemUser",
@@ -105,6 +111,20 @@
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
       },
       "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[variables('repoURL')]",
+            "branch": "main",
+            "project": "[variables('repoProject')]",
+            "IsManualIntegration": true
+          }
+        },
         {
           "type": "networkConfig",
           "apiVersion": "2019-08-01",
