@@ -12,7 +12,7 @@ echo "APIm Name : $6"
 echo "ACR Name : $7"
 echo "DevOps Server: $8"
 echo "DevOps PAT: $9"
-echo "DevOps Agent Name: $10
+echo "DevOps Agent Name: ${10}
 
 aksClusterName=$2
 resourceGroupName=$3
@@ -22,7 +22,7 @@ apimName=$6
 acrName=$7
 devopsServer=$8
 devopsPAT=$9
-devopsAgentName=$10
+devopsAgentName=${10}
 wellKnownGatewayName="$apimName-onprem-apim-gway"
 
 if [ -z "$devopsPAT" ]
