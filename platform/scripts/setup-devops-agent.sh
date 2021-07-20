@@ -27,6 +27,8 @@ devopsPAT=${10}
 devopsAgentName=${11}
 
 mkdir -p $home/agent-scripts
+mkdir -p $home/api-definitions
+
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__install-dependencies.sh" --name "script/__install-dependencies.sh" --output none
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-nginx-ingress.sh" --name "script/__setup-nginx-ingress.sh" --output none
 az storage blob download --sas-token "$storageSasToken" --account-name "$storageAccountName" --container-name "platformtemplates" -f "$home/agent-scripts/__setup-apim-self-hosted-gateway.sh" --name "script/__setup-apim-self-hosted-gateway.sh" --output none
