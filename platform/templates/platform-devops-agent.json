@@ -114,7 +114,7 @@
                     "fileUris": [
                         "[parameters('setupScriptUrl')]"
                     ],
-                    "commandToExecute" : "[concat('sh setup-devops-agent.sh ', variables('adminName'), ' ', parameters('aksClusterName'), ' ', resourceGroup().name, ' ', parameters('storageAccountName'), ' \"', parameters('storageSasToken'), '\" \"', parameters('apiManagementName'), '\" \"', parameters('acrName'), '\" \"', parameters('aksAppInsightsConnectionString') ,'\" ', parameters('devopsServerUrl'), ' ', parameters('devopsServerPAT'), ' ', variables('devopsAgentName'))]"
+                    "commandToExecute" : "[concat('sh setup-devops-agent.sh ', variables('adminName'), ' ', parameters('aksClusterName'), ' ', resourceGroup().name, ' ', parameters('storageAccountName'), ' \"', parameters('storageSasToken'), '\" \"', parameters('apiManagementName'), '\" \"', parameters('acrName'), '\" \"', parameters('aksAppInsightsConnectionString') ,'\" ', variables('devopsAgentName'), ' ', parameters('devopsServerUrl'), ' ', parameters('devopsServerPAT'), ' ')]"
                 }
             }
         }

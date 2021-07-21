@@ -11,9 +11,9 @@ echo "Storage SAS Token: $5"
 echo "APIm Name : $6"
 echo "ACR Name : $7"
 echo "AKS App Insights Key : $8"
-echo "DevOps Server: $9"
-echo "DevOps PAT: ${10}"
-echo "DevOps Agent Name: ${11}"
+echo "DevOps Agent Name: $9"
+echo "DevOps Server: ${10}"
+echo "DevOps PAT: ${11}"
 
 aksClusterName=$2
 resourceGroupName=$3
