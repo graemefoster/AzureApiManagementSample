@@ -42,7 +42,7 @@
             "properties": {
                 "displayName": "FunctionProperties",
                 "keyVault": {
-                    "secretIdentifier" : "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyvault'), 'restToSoapfunctionCode'), '2019-09-01').secretUri]"
+                    "secretIdentifier": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyvault'), 'restToSoapfunctionCode'), '2019-09-01').secretUri]"
                 },
                 "tags": [
                     "key",
@@ -103,9 +103,9 @@
                         "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', parameters('apiManagementServiceName'), concat(parameters('apiManagementServiceName'), '-appinsights-logger'))]",
                         "httpCorrelationProtocol": "W3C",
                         "logClientIp": true,
-                        "sampling" : {
-                            "percentage" : 5,
-                            "samplingType" : "fixed"
+                        "sampling": {
+                            "percentage": 5,
+                            "samplingType": "fixed"
                         }
                     },
                     "dependsOn": [
@@ -154,13 +154,19 @@
                     "type": "groups",
                     "name": "Developers",
                     "apiVersion": "2020-12-01",
-                    "dependsOn": [ "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'sample-product')]" ]
+                    "dependsOn": [
+                        "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'sample-product')]",
+                        "[resourceId('Microsoft.ApiManagement/service/products/apis', parameters('apiManagementServiceName'), 'sample-product', variables('apiName'))]"
+                    ]
                 },
                 {
                     "type": "policies",
                     "apiVersion": "2020-12-01",
                     "name": "policy",
-                    "dependsOn": [ "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'sample-product')]" ],
+                    "dependsOn": [
+                        "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'sample-product')]",
+                        "[resourceId('Microsoft.ApiManagement/service/products/groups', parameters('apiManagementServiceName'), 'sample-product', 'Developers')]"
+                    ],
                     "properties": {
                         "format": "rawxml-link",
                         "value": "[concat(variables('templateBaseUri'), '/', 'employmentDetailsproduct-policy.xml', parameters('templateSasKey'))]"
