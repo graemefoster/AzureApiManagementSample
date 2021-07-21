@@ -24,7 +24,8 @@
     "functionCodeSecretName": "[concat(parameters('keyvaultName'), '/', parameters('functionCodeSecretName'))]",
     "function-key": "[guid(resourceGroup().id)]",
     "repoURL": "https://github.com/graemefoster/AzureApiManagementSample",
-    "repoProject": "functions\\ApiPoc\\ApiPoc.csproj"
+    "repoProject": "functions\\ApiPoc\\ApiPoc.csproj",
+    "roleAssignmentId": "[guid(concat(parameters('apiName'), '-read-', parameters('keyVaultName')))]"
   },
   "resources": [
     {
@@ -113,10 +114,6 @@
             {
               "name": "ApiPoc:Employee:SystemUser",
               "value": "sysuser012345"
-            },
-            {
-              "name": "ApiPoc:Employee:SystemPassword",
-              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('soapApiPasswordSecretName')), '2019-09-01').secretUri, ')')]"
             },
             {
               "name": "ApiPoc:Employee:Endpoint",
@@ -241,7 +238,7 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
-      "name": "[guid(concat(parameters('apiName'), '-read-', parameters('keyVaultName')))]",
+      "name": "[variables('roleAssignmentId')]",
       "scope": "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('apiName'))]"
@@ -250,6 +247,18 @@
         "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4633458b-17de-408a-b874-0445c86b69e6')]",
         "principalId": "[reference(concat('Microsoft.Web/sites/', parameters('apiName')), '2016-08-01', 'Full').identity.principalId]",
         "principalType": "ServicePrincipal"
+      }
+    },
+    {
+      "name": "[concat(parameters('apiName'), '/appsettings')]",
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2020-12-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites',parameters('apiName'))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments',variables('roleAssignmentId'))]"
+      ],
+      "properties": {
+        "ApiPoc:Employee:SystemPassword": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('soapApiPasswordSecretName')), '2019-09-01').secretUri, ')')]"
       }
     }
   ],
