@@ -50,6 +50,22 @@
       }
     },
     {
+      "name": "[concat(parameters('keyvaultName'), '/', parameters('soapApiPasswordSecretName'))]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2019-09-01",
+      "properties": {
+        "value": "[variables('soapApiPassword')]"
+      }
+    },
+    {
+      "name": "[variables('functionCodeSecretName')]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2019-09-01",
+      "properties": {
+        "value": "[variables('function-key')]"
+      }
+    },
+    {
       "name": "[parameters('apiName')]",
       "type": "Microsoft.Web/sites",
       "apiVersion": "2020-12-01",
@@ -59,7 +75,8 @@
         "type": "SystemAssigned"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', parameters('keyvaultName'), parameters('soapApiPasswordSecretName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('appServicePlanName'))]",
         "[variables('appInsightsName')]"
       ],
       "properties": {
@@ -219,22 +236,6 @@
             }
           }
         ]
-      }
-    },
-    {
-      "name": "[concat(parameters('keyvaultName'), '/', parameters('soapApiPasswordSecretName'))]",
-      "type": "Microsoft.KeyVault/vaults/secrets",
-      "apiVersion": "2019-09-01",
-      "properties": {
-        "value": "[variables('soapApiPassword')]"
-      }
-    },
-    {
-      "name": "[variables('functionCodeSecretName')]",
-      "type": "Microsoft.KeyVault/vaults/secrets",
-      "apiVersion": "2019-09-01",
-      "properties": {
-        "value": "[variables('function-key')]"
       }
     },
     {
