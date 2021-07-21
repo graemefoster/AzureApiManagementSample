@@ -14,13 +14,9 @@ echo "Fetching kubelogin"
 curl -L https://github.com/Azure/kubelogin/releases/download/v0.0.9/kubelogin-linux-amd64.zip -o $home/downloads/kubelogin.zip
 sudo unzip -o $home/downloads/kubelogin.zip -d $home/kubelogin/
 
-echo "Getting credentials for AKS"
-az aks get-credentials --overwrite-existing --name $aksClusterName --resource-group $resourceGroupName --file $home/.kube/config
-
-echo "Installing Azure CLI"
-sudo az aks install-cli 
-
 echo "Installing Docker (https://docs.docker.com/engine/install/ubuntu/)"
+sudo apt-get update
+
 sudo apt-get install \
     apt-transport-https \
     ca-certificates \
@@ -35,14 +31,15 @@ cho \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update
- sudo apt-get install docker-ce docker-ce-cli containerd.io
+sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 echo "Installed Docker"
 
-echo "Running kubelogin"
-export KUBECONFIG=$home/.kube/config
-$home/kubelogin/bin/linux_amd64/kubelogin convert-kubeconfig -l msi
+echo "Getting credentials for AKS"
+az aks get-credentials --overwrite-existing --name $aksClusterName --resource-group $resourceGroupName --file $home/.kube/config
+
+echo "Installing Kubectl via az aks install-cli"
+sudo az aks install-cli 
 
 echo "Installing Helm"
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-

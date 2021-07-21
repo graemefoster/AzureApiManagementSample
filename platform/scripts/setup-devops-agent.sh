@@ -51,6 +51,13 @@ $home/agent-scripts/__install-dependencies.sh "$home" "$aksClusterName" "$resour
 echo "--------------------------------------------------------"
 
 echo "--------------------------------------------------------"
+echo "RUNNING KUBELOGIN"
+export KUBECONFIG=$home/.kube/config
+$home/kubelogin/bin/linux_amd64/kubelogin convert-kubeconfig -l msi
+kubectl get nodes
+echo "--------------------------------------------------------"
+
+echo "--------------------------------------------------------"
 echo "SETTING UP NGINX INGRES IN AKS"
 echo "--------------------------------------------------------"
 $home/agent-scripts/__setup-nginx-ingress.sh "$home" "$storageAccountName" "$storageSasToken"
