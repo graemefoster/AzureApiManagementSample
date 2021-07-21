@@ -26,6 +26,12 @@ devopsServer=$9
 devopsPAT=${10}
 devopsAgentName=${11}
 
+mkdir -p $home/downloads
+echo "Installing az cli"
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+echo "Logging into Azure using vm identity"
+az login --identity
+
 mkdir -p $home/agent-scripts
 mkdir -p $home/api-definitions
 

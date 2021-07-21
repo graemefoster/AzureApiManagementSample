@@ -4,11 +4,6 @@ home=$1
 aksClusterName=$2
 resourceGroupName=$3
 
-mkdir -p $home/downloads
-
-echo "Installing az cli"
-curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
 echo "Installing unzip"
 sudo apt install -y unzip
 
@@ -19,10 +14,7 @@ echo "Fetching kubelogin"
 curl -L https://github.com/Azure/kubelogin/releases/download/v0.0.9/kubelogin-linux-amd64.zip -o $home/downloads/kubelogin.zip
 sudo unzip -o $home/downloads/kubelogin.zip -d $home/kubelogin/
 
-echo "Logging into Azure using vm identity"
-az login --identity
 echo "Getting credentials for AKS"
-
 az aks get-credentials --overwrite-existing --name $aksClusterName --resource-group $resourceGroupName --file $home/.kube/config
 
 echo "Installing Azure CLI"
