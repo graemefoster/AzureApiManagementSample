@@ -75,8 +75,8 @@
         "type": "SystemAssigned"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', parameters('keyvaultName'), parameters('soapApiPasswordSecretName'))]",
-        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyvaultName'), parameters('soapApiPasswordSecretName'))]",
         "[variables('appInsightsName')]"
       ],
       "properties": {
