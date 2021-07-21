@@ -39,3 +39,6 @@ kubectl create secret tls aks-ingress-tls \
     --key $home/aks-ingress-tls.key \
     --cert $home/aks-ingress-tls.crt
 
+echo "Waiting for nginx..."
+pods=$(kubectl get pods -n ingress-basic -o name)
+kubectl wait $pods -n ingress-basic --for condition=ready
