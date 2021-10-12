@@ -24,7 +24,7 @@
         "tenantId": "[subscription().tenantId]",
         "sku": {
           "name": "standard",
-          "family": "A",
+          "family": "A"
         },
         "enableSoftDelete": true,
         "softDeleteRetentionInDays": 7,
